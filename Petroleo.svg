@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 100 100">
+            <!-- Petroleo -->
+            <circle cx="50" cy="50" r="45" fill="white" />
+            <path d="M50 20 L40 50 L60 50 Z M45 50 L55 50 L50 80 Z" fill="#444444"/>
+</svg>

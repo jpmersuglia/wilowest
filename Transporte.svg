@@ -1,0 +1,7 @@
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 100 100">
+            <!-- Transporte -->
+            <circle cx="50" cy="50" r="45" fill="white" />
+            <rect x="25" y="40" width="50" height="25" fill="#444444" />
+            <circle cx="30" cy="70" r="5" fill="white" />
+            <circle cx="70" cy="70" r="5" fill="white" />
+          </svg>

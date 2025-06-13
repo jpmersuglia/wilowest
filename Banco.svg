@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 100 100">
+            <!-- Banco -->
+            <circle cx="50" cy="50" r="45" fill="white" />
+            <polygon points="50,20 20,50 80,50" fill="#444444" />
+            <rect x="30" y="50" width="40" height="30" fill="white" stroke="white" />
+          </svg>
