@@ -1,40 +1,42 @@
-/* Estilo general (sin cambios relevantes) */
+/* Mobile-first design */
 body {
     font-family: Arial, sans-serif;
-    background-color: #1e1e2f;
+    background-color: #121212;
     color: white;
     margin: 0;
     padding: 0;
-    display: flex;
+    max-width: 720px;
+    margin: 0 auto;
 }
 
 .menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 200px;
-    height: 100vh;
-    background-color: #333;
+    position: relative;
+    width: 100%;
+    height: auto;
+    background-color: #1a1a1a;
     color: #fff;
-    padding: 20px;
+    padding: 15px;
     box-sizing: border-box;
+    border-bottom: 2px solid #335428;
 }
 
 .menuMainData h1 {
-    font-size: 1.5em;
+    font-size: 1.3em;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 #mainCompanyMoney {
     font-size: 1.2em;
     font-weight: bold;
     margin-bottom: 20px;
+    text-align: center;
 }
 
 .estadisticas {
-    margin-top: 30px;
-    background-color: #344;
-    border: aquamarine solid 2px;
+    margin-top: 20px;
+    background-color: #1a1a1a;
+    border: #335428 solid 2px;
     border-radius: 10px;
     padding: 15px;
 }
@@ -43,15 +45,18 @@ body {
     font-size: 1.1em;
     font-weight: bold;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 .estadisticas p {
     font-size: 0.9em;
     margin-bottom: 5px;
+    text-align: center;
 }
 
 .vistas {
-    margin-top: 30px;
+    margin-top: 20px;
+    display: none; /* Hide the navigation menu on mobile */
 }
 
 .vistas ul {
@@ -60,7 +65,7 @@ body {
 }
 
 .vistas li {
-    background-color: #555;
+    background-color: #1a1a1a;
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 5px;
@@ -76,59 +81,58 @@ body {
 }
 
 .vistas li:hover {
-    background-color: rgb(77, 170, 251);
+    background-color: #335428;
 }
 
 .main {
-    margin-left: 240px;
-    padding: 20px;
-    flex-grow: 1;
+    margin: 0;
+    padding: 15px;
     box-sizing: border-box;
 }
 
 button {
     font-size: 14px;
     font-weight: bold;
-    padding: 10px 20px;
-    margin: 5px;
+    padding: 12px 20px;
+    margin: 5px 0;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #555;
+    background-color: #335428;
     color: #eee;
-    display: block; /* Mostrar los botones en líneas separadas */
-    width: 100%; /* Ocupar todo el ancho disponible */
-    box-sizing: border-box; /* Incluir padding y border en el ancho */
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 button:hover {
-    background-color: #777;
+    background-color: #3f6a32;
 }
 
 button:disabled {
-    background-color: #333;
+    background-color: #1a1a1a;
     color: #777;
     cursor: not-allowed;
 }
 
 #app {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
 }
 
 /* Caja de compañía */
 .counter-box {
     padding: 15px;
-    border: 2px solid #444;
+    border: 2px solid #335428;
     border-radius: 10px;
-    background-color: #2a2a3d;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    width: 250px;
+    background-color: #1a1a1a;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
     text-align: center;
     display: flex;
-    flex-direction: column; /* Mantener la dirección vertical */
+    flex-direction: column;
     box-sizing: border-box;
 }
 
@@ -139,7 +143,7 @@ button:disabled {
     align-items: center;
     padding-bottom: 10px;
     margin-bottom: 10px;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #335428;
 }
 
 .companyHead {
@@ -150,22 +154,22 @@ button:disabled {
 }
 
 .companyImage {
-    width: 30px;
-    height: 30px;
+    width: 25px;
+    height: 25px;
     margin-right: 8px;
 }
 
 .companyName {
     color: #ffffff;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
     margin-bottom: 0;
 }
 
 .mainCounter {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
-    color: #30ff3e;
+    color: #4caf50;
     margin-bottom: 10px;
     transition: color 0.2s ease-in-out;
 }
@@ -173,17 +177,17 @@ button:disabled {
 /* Sección de acciones de la compañía */
 .company-actions {
     display: flex;
-    flex-direction: column; /* Alinear los botones verticalmente */
+    flex-direction: column;
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #335428;
 }
 
 .company-actions button {
     font-size: 12px;
-    padding: 8px 12px;
-    margin: 5px 0; /* Margen superior e inferior para separar botones */
-    display: block; /* Asegurar que cada botón ocupe una línea */
+    padding: 10px;
+    margin: 5px 0;
+    display: block;
     width: 100%;
     box-sizing: border-box;
 }
@@ -196,6 +200,7 @@ button:disabled {
 
 .company-details p {
     margin-bottom: 5px;
+    text-align: center;
 }
 
 .valueCounter {
@@ -205,44 +210,47 @@ button:disabled {
 
 .dividendControl {
     display: flex;
-    flex-direction: column; /* Alinear etiqueta y slider verticalmente */
+    flex-direction: column;
     margin-top: 8px;
-    width: 100%; /* Ocupar todo el ancho */
+    width: 100%;
     box-sizing: border-box;
 }
 
 .dividendControl label {
-    margin-right: 0; /* Eliminar margen derecho innecesario */
-    margin-bottom: 5px; /* Espacio entre la etiqueta y el slider */
-    display: block; /* Ocupar una línea completa */
-    text-align: center; /* Centrar la etiqueta */
+    margin-bottom: 5px;
+    display: block;
+    text-align: center;
 }
 
 .dividendSlider {
     flex-grow: 1;
-    margin-left: 0; /* Eliminar márgenes laterales */
-    margin-right: 0;
-    background-color: #555;
+    margin: 0;
+    background-color: #1a1a1a;
     border-radius: 5px;
     padding: 2px;
-    width: 100%; /* Ocupar todo el ancho disponible */
+    width: 100%;
     box-sizing: border-box;
+    height: 25px;
 }
 
 .dividendSlider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 15px;
-    height: 15px;
-    background: #eee;
+    width: 20px;
+    height: 20px;
+    background: #335428;
     cursor: pointer;
     border-radius: 50%;
 }
 
+.dividendSlider::-webkit-slider-thumb:hover {
+    background: #3f6a32;
+}
+
 .dividendPercentage {
     width: 100%;
-    text-align: center; /* Centrar el porcentaje */
+    text-align: center;
     color: #eee;
     font-size: 0.85em;
-    margin-top: 5px; /* Espacio superior para el porcentaje */
+    margin-top: 5px;
 }

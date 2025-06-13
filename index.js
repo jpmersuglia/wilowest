@@ -81,6 +81,7 @@ class Company {
 
         this.updateDisplay();
         updateMainDisplay();
+        updateStatistics();
     }
 
     handleUpgrade() {
@@ -108,6 +109,7 @@ class Company {
 
                 this.updateDisplay();
                 updateMainDisplay();
+                updateStatistics();
             }, 1000);
         } else if (increment === 0 && this.intervalId) {
             clearInterval(this.intervalId);
@@ -191,37 +193,11 @@ function updateMainDisplay() {
 
 // Inicializar la primera compañía
 document.addEventListener('DOMContentLoaded', () => {
-    const app = document.getElementById('app');
-    const initialBox = document.createElement('div');
-    initialBox.className = 'counter-box';
-    const companyName = companyNames[Math.floor(Math.random() * companyNames.length)];
-    const companyType = companyTypes[Math.floor(Math.random() * companyTypes.length)];
-    initialBox.innerHTML = `
-        <div class="company-info">
-            <div class="companyHead">
-                <img src="${companyType}.svg" class="companyImage">
-                <h2 class="companyName">${companyName}</h2>
-            </div>
-            <p class="mainCounter">$ 0.00</p>
-        </div>
-        <div class="company-actions">
-            <button class="work">Trabajar</button>
-            <button class="upgrade">Mejorar</button>
-            <button class="sell">Vender</button>
-        </div>
-        <div class="company-details">
-            <p>Company Value: <span class="valueCounter">0.00</span></p>
-            <div class="dividendControl">
-                Dividendos: <input type="range" min="0" max="100" value="0" class="dividendSlider">
-                <span class="dividendPercentage">0%</span>
-            </div>
-        </div>
-    `;
-    app.appendChild(initialBox);
-    companies.push(new Company(initialBox, companyName, companyType));
-
     const createCompanyButton = document.getElementById('createCompany');
     createCompanyButton.addEventListener('click', createCompany);
+
+    // Create initial company
+    createCompany();
 
     updateMainDisplay();
     updateStatistics();
