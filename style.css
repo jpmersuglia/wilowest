@@ -10,14 +10,44 @@ body {
 }
 
 .menu {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: -100%;
     width: 100%;
-    height: auto;
+    height: 100vh;
     background-color: #1a1a1a;
     color: #fff;
     padding: 15px;
     box-sizing: border-box;
-    border-bottom: 2px solid #335428;
+    border-right: 2px solid #335428;
+    transition: left 0.3s ease;
+    z-index: 1000;
+}
+
+.menu.active {
+    left: 0;
+}
+
+.menu-toggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background-color: #335428;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-toggle:hover {
+    background-color: #3f6a32;
 }
 
 .menuMainData h1 {
@@ -187,7 +217,9 @@ button:disabled {
     font-size: 12px;
     padding: 10px;
     margin: 5px 0;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     box-sizing: border-box;
 }
@@ -253,4 +285,11 @@ button:disabled {
     color: #eee;
     font-size: 0.85em;
     margin-top: 5px;
+}
+
+.upgrade-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-left: 5px;
 }

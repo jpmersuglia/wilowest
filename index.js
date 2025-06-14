@@ -60,13 +60,23 @@ class Company {
         this.bindEvents();
         this.applyUpgrade();
         this.updateDividendDisplay(); // Inicializar el display del dividendo
+        this.updateUpgradeButton();
     }
 
     bindEvents() {
         this.workButton.addEventListener('click', () => this.incrementCounter());
         this.upgradeButton.addEventListener('click', () => this.handleUpgrade());
-        this.sellButton.addEventListener('click', () => this.sellCompany());
+        this.sellButton.addEventListener('click', () => this.confirmSell());
         this.dividendSlider.addEventListener('input', () => this.handleDividendChange());
+    }
+
+    updateUpgradeButton() {
+        const nextCost = this.upgrade.getNextCost();
+        if (this.counter >= nextCost) {
+            this.upgradeButton.innerHTML = 'Mejorar <img src="media/arrow-circle-up.svg" alt="Upgrade" class="upgrade-icon">';
+        } else {
+            this.upgradeButton.innerHTML = 'Mejorar';
+        }
     }
 
     incrementCounter() {
@@ -80,6 +90,7 @@ class Company {
         totalMoneyEarned += mainCompanyDividend;
 
         this.updateDisplay();
+        this.updateUpgradeButton();
         updateMainDisplay();
         updateStatistics();
     }
@@ -91,6 +102,7 @@ class Company {
             this.upgrade.currentLevel++;
             this.applyUpgrade();
             this.updateDisplay();
+            this.updateUpgradeButton();
         }
     }
 
@@ -108,6 +120,7 @@ class Company {
                 totalMoneyEarned += mainCompanyDividend;
 
                 this.updateDisplay();
+                this.updateUpgradeButton();
                 updateMainDisplay();
                 updateStatistics();
             }, 1000);
@@ -124,6 +137,12 @@ class Company {
 
     updateDividendDisplay() {
         this.dividendPercentage.textContent = `${this.dividendRate}%`;
+    }
+
+    confirmSell() {
+        if (confirm(`¿Estás seguro que deseas vender ${this.name} por $${this.value.toFixed(2)}?`)) {
+            this.sellCompany();
+        }
     }
 
     sellCompany() {
@@ -154,7 +173,7 @@ function createCompany() {
     box.innerHTML = `
         <div class="company-info">
             <div class="companyHead">
-                <img src="${type}.svg" class="companyImage">
+                <img src="../media/${type}.svg" class="companyImage">
                 <h2 class="companyName">${name}</h2>
             </div>
             <p class="mainCounter">$ 0.00</p>
@@ -201,4 +220,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateMainDisplay();
     updateStatistics();
+
+    // Menu toggle functionality
+    const menuToggle = document.querySelector('.menu-toggle');
+    const menu = document.querySelector('.menu');
+    
+    menuToggle.addEventListener('click', () => {
+        menu.classList.toggle('active');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !menuToggle.contains(e.target)) {
+            menu.classList.remove('active');
+        }
+    });
 });
