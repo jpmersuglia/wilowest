@@ -1,6 +1,6 @@
 // Datos base
 let mainCompanyMoney = 50000;
-let totalCompaniesCreated = 1;
+let totalCompaniesCreated = 0;
 let totalMoneyEarned = mainCompanyMoney;
 
 const companyNames = [
