@@ -69,10 +69,11 @@ let companies = []; // Arreglo para almacenar instancias de compañías
 
 // Clase para manejar cada compañía
 class Company {
-    constructor(boxElement, name, type) {
+    constructor(boxElement, name, type, tier = 0) {
         this.box = boxElement;
         this.name = name;
         this.type = type;
+        this.tier = tier;
         this.value = 0;
         this.counter = 0;
         this.dividendRate = 0;
@@ -82,6 +83,7 @@ class Company {
         this.valueCounter = this.box.querySelector('.valueCounter');
         this.workButton = this.box.querySelector('.work');
         this.upgradeButton = this.box.querySelector('.upgrade');
+        this.mergeButton = this.box.querySelector('.merge');
         this.sellButton = this.box.querySelector('.sell');
         this.dividendSlider = this.box.querySelector('.dividendSlider');
         this.dividendPercentage = this.box.querySelector('.dividendPercentage');
@@ -90,7 +92,7 @@ class Company {
             currentLevel: 0,
             levels: {
                 0: { cost: 100, increment: 0, resource: 0 },
-                1: { cost: 500, increment: 15, resource: 1 },
+                1: { cost: 500, increment: 1500000, resource: 1 },
                 2: { cost: 1000, increment: 45, resource: 2 },
                 3: { cost: 10000, increment: 40, resource: 3 },
                 4: { cost: 20000, increment: 50, resource: 4 },
@@ -115,7 +117,7 @@ class Company {
         this.bindEvents();
         this.applyUpgrade();
         this.updateDividendDisplay();
-        this.updateUpgradeButton();
+        this.updateButtons();
         updateResourceDisplay();
     }
 
@@ -133,22 +135,58 @@ class Company {
     bindEvents() {
         this.workButton.addEventListener('click', () => this.incrementCounter());
         this.upgradeButton.addEventListener('click', () => this.handleUpgrade());
+        this.mergeButton.addEventListener('click', () => this.handleMerge());
         this.sellButton.addEventListener('click', () => this.confirmSell());
         this.dividendSlider.addEventListener('input', () => this.handleDividendChange());
     }
 
-    updateUpgradeButton() {
-        const nextCost = this.upgrade.getNextCost();
-        if (this.upgrade.currentLevel >= 10) {
-            this.upgradeButton.innerHTML = 'Nivel Máximo';
-            this.upgradeButton.disabled = true;
-        } else if (this.counter >= nextCost) {
-            this.upgradeButton.innerHTML = 'Mejorar <img src="media/arrow-circle-up.svg" alt="Upgrade" class="upgrade-icon">';
-            this.upgradeButton.disabled = false;
+    updateButtons() {
+        // Actualizar botón de mejora
+        if (this.tier > 0 || this.upgrade.currentLevel >= 10) {
+            this.upgradeButton.style.display = 'none';
         } else {
-            this.upgradeButton.innerHTML = 'Mejorar';
-            this.upgradeButton.disabled = false;
+            this.upgradeButton.style.display = 'block';
+            const nextCost = this.upgrade.getNextCost();
+            if (this.counter >= nextCost && this.upgrade.currentLevel < 10) {
+                this.upgradeButton.innerHTML = 'Mejorar <img src="media/arrow-circle-up.svg" alt="Upgrade" class="upgrade-icon">';
+                this.upgradeButton.disabled = false;
+            } else {
+                this.upgradeButton.innerHTML = 'Mejorar';
+                this.upgradeButton.disabled = this.counter < nextCost;
+            }
         }
+    
+        // Actualizar botón de merge
+        if (this.tier >= 3) {
+            this.mergeButton.style.display = 'none';
+        } else if ((this.tier === 0 && this.upgrade.currentLevel >= 10) || this.tier > 0) {
+            this.mergeButton.style.display = 'block';
+            if (this.canMerge()) {
+                this.mergeButton.disabled = false;
+                this.mergeButton.classList.add('merge-button');
+            } else {
+                this.mergeButton.disabled = true;
+                this.mergeButton.classList.remove('merge-button');
+            }
+        } else {
+            this.mergeButton.style.display = 'none';
+        }
+    }
+
+    canMerge() {
+        if (this.tier >= 3) return false; // Can't merge if already max tier
+        
+        // For Tier 0, require all companies to be level 10
+        if (this.tier === 0 && this.upgrade.currentLevel < 10) return false;
+        
+        const sameTypeCompanies = companies.filter(c => 
+            c.type === this.type && 
+            c.tier === this.tier && 
+            c !== this &&
+            (this.tier > 0 || c.upgrade.currentLevel >= 10) // Require level 10 only for Tier 0
+        );
+        
+        return sameTypeCompanies.length >= 2; // Need 2 other companies of same type and tier
     }
 
     incrementCounter() {
@@ -162,21 +200,83 @@ class Company {
         totalMoneyEarned += mainCompanyDividend;
 
         this.updateDisplay();
-        this.updateUpgradeButton();
+        this.updateButtons();
         updateMainDisplay();
         updateStatistics();
         updateResourceDisplay();
     }
 
     handleUpgrade() {
+        if (this.tier > 0) return; // No upgrades for non-Tier 0 companies
+
         const nextCost = this.upgrade.getNextCost();
         if (this.counter >= nextCost && this.upgrade.currentLevel < 10) {
             this.counter -= nextCost;
             this.upgrade.currentLevel++;
             this.applyUpgrade();
             this.updateDisplay();
-            this.updateUpgradeButton();
+            this.updateButtons();
         }
+    }
+
+    handleMerge() {
+        if (this.tier >= 3) return; // No merges for Tier 3 companies
+        if (this.canMerge()) {
+            this.merge();
+        }
+    }
+
+    merge() {
+        // For Tier 0, require all companies to be level 10
+        if (this.tier === 0 && this.upgrade.currentLevel < 10) return;
+        
+        const sameTypeCompanies = companies.filter(c => 
+            c.type === this.type && 
+            c.tier === this.tier && 
+            c !== this &&
+            (this.tier > 0 || c.upgrade.currentLevel >= 10) // Require level 10 only for Tier 0
+        );
+
+        if (sameTypeCompanies.length < 2) return;
+
+        // Get the first two companies for merging
+        const [company1, company2] = sameTypeCompanies.slice(0, 2);
+
+        // Sum up the counters and values
+        const totalCounter = this.counter + company1.counter + company2.counter;
+        const totalValue = this.value + company1.value + company2.value;
+
+        // Remove the merged companies
+        company1.box.remove();
+        company2.box.remove();
+        companies = companies.filter(c => c !== company1 && c !== company2);
+
+        // Update this company to the next tier
+        this.tier++;
+        this.counter = totalCounter;
+        this.value = totalValue;
+        this.upgrade.currentLevel = 0;
+
+        // Update tier badge in the interface
+        const tierBadge = this.box.querySelector('.tier-badge');
+        if (tierBadge) {
+            tierBadge.textContent = `Tier ${this.tier}`;
+            tierBadge.setAttribute('data-tier', this.tier);
+        }
+
+        // Update box border and company head background
+        this.box.setAttribute('data-tier', this.tier);
+        const companyHead = this.box.querySelector('.companyHead');
+        if (companyHead) {
+            companyHead.setAttribute('data-tier', this.tier);
+        }
+
+        // Update display
+        this.updateDisplay();
+        this.updateButtons();
+        updateMainDisplay();
+        updateStatistics();
+        updateResourceDisplay();
     }
 
     applyUpgrade() {
@@ -194,7 +294,7 @@ class Company {
                 totalMoneyEarned += mainCompanyDividend;
 
                 this.updateDisplay();
-                this.updateUpgradeButton();
+                this.updateButtons();
                 updateMainDisplay();
                 updateStatistics();
                 updateResourceDisplay();
@@ -230,8 +330,19 @@ class Company {
     }
 
     updateDisplay() {
-        this.mainCounter.textContent = `$ ${this.counter.toFixed(2)}`; // Mostrar con decimales si es necesario
-        this.valueCounter.textContent = `$ ${this.value.toFixed(2)}`;   // Mostrar con decimales si es necesario
+        this.mainCounter.textContent = `$ ${this.counter.toFixed(2)}`;
+        this.valueCounter.textContent = `$ ${this.value.toFixed(2)}`;
+        
+        // Update tier badge display
+        const tierBadge = this.box.querySelector('.tier-badge');
+        if (tierBadge) {
+            if (this.tier === 0) {
+                tierBadge.textContent = `Nivel ${this.upgrade.currentLevel}`;
+            } else {
+                tierBadge.textContent = `Tier ${this.tier}`;
+            }
+            tierBadge.setAttribute('data-tier', this.tier);
+        }
     }
 }
 
@@ -271,17 +382,22 @@ function createCompany() {
 
     const box = document.createElement('div');
     box.className = 'counter-box';
+    box.setAttribute('data-tier', '0');
     box.innerHTML = `
         <div class="company-info">
-            <div class="companyHead">
-                <img src="../media/${companyTypes[type].icon}" class="companyImage">
-                <h2 class="companyName">${name}</h2>
+            <div class="companyHead" data-tier="0">
+                <div class="companyHead-left">
+                    <img src="../media/${companyTypes[type].icon}" class="companyImage">
+                    <h2 class="companyName">${name}</h2>
+                </div>
+                <span class="tier-badge" data-tier="0">Nivel 0</span>
             </div>
             <p class="mainCounter">$ 0.00</p>
         </div>
         <div class="company-actions">
             <button class="work">Trabajar</button>
             <button class="upgrade">Mejorar</button>
+            <button class="merge" style="display: none;">Merge</button>
             <button class="sell">Vender</button>
         </div>
         <div class="company-details">
