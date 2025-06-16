@@ -93,15 +93,15 @@ class Company {
             levels: {
                 0: { cost: 100, increment: 0, resource: 0 },
                 1: { cost: 500, increment: 1500000, resource: 1 },
-                2: { cost: 1000, increment: 45, resource: 2 },
-                3: { cost: 10000, increment: 40, resource: 3 },
-                4: { cost: 20000, increment: 50, resource: 4 },
-                5: { cost: 25000, increment: 45, resource: 5 },
-                6: { cost: 50000, increment: 60, resource: 6 },
-                7: { cost: 100000, increment: 50, resource: 7 },
-                8: { cost: 255000, increment: 40, resource: 8 },
-                9: { cost: 500000, increment: 60, resource: 9 },
-                10: { cost: 1000000, increment: 50, resource: 10 },
+                2: { cost: 1000, increment: 20, resource: 2 },
+                3: { cost: 10000, increment: 30, resource: 3 },
+                4: { cost: 20000, increment: 40, resource: 4 },
+                5: { cost: 25000, increment: 50, resource: 5 },
+                6: { cost: 50000, increment: 55, resource: 6 },
+                7: { cost: 100000, increment: 60, resource: 7 },
+                8: { cost: 255000, increment: 75, resource: 8 },
+                9: { cost: 500000, increment: 85, resource: 9 },
+                10: { cost: 1000000, increment: 100, resource: 10 },
             },
             getNextCost: function() {
                 return this.levels[this.currentLevel]?.cost || 100;
@@ -119,6 +119,21 @@ class Company {
         this.updateDividendDisplay();
         this.updateButtons();
         updateResourceDisplay();
+    }
+
+    getTierIncrement() {
+        switch(this.tier) {
+            case 0:
+                return this.upgrade.getIncrement();
+            case 1:
+                return 125;
+            case 2:
+                return 175;
+            case 3:
+                return 220;
+            default:
+                return 0;
+        }
     }
 
     calculateResourceIncome() {
@@ -213,6 +228,13 @@ class Company {
         if (this.counter >= nextCost && this.upgrade.currentLevel < 10) {
             this.counter -= nextCost;
             this.upgrade.currentLevel++;
+            
+            // Clear existing interval before applying new upgrade
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+            
             this.applyUpgrade();
             this.updateDisplay();
             this.updateButtons();
@@ -271,6 +293,9 @@ class Company {
             companyHead.setAttribute('data-tier', this.tier);
         }
 
+        // Reapply upgrade to get the new tier increment
+        this.applyUpgrade();
+
         // Update display
         this.updateDisplay();
         this.updateButtons();
@@ -280,8 +305,26 @@ class Company {
     }
 
     applyUpgrade() {
-        const increment = this.upgrade.getIncrement();
-        if (increment > 0 && !this.intervalId) {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+
+        // Determinar el incremento basado en el tier
+        let increment = 0;
+        if (this.tier === 0) {
+            increment = this.upgrade.getIncrement();
+        } else if (this.tier === 1) {
+            increment = 125;
+        } else if (this.tier === 2) {
+            increment = 175;
+        } else if (this.tier === 3) {
+            increment = 220;
+        }
+
+        console.log(`Company ${this.name} (Tier ${this.tier}) increment set to: ${increment}`); // Debug log
+
+        if (increment > 0) {
             this.intervalId = setInterval(() => {
                 const dividend = this.dividendRate / 100;
                 const companyEarnings = increment * (1 - dividend);
@@ -299,9 +342,6 @@ class Company {
                 updateStatistics();
                 updateResourceDisplay();
             }, 1000);
-        } else if (increment === 0 && this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
         }
     }
 
