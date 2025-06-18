@@ -503,13 +503,135 @@ function updateMainDisplay() {
     document.getElementById('createCompany').disabled = mainCompanyMoney < 50000 || companies.length >= 5;
 }
 
-// Inicializar la primera compañía
+// --- RESTART GAME FUNCTIONALITY ---
+function resetGameState() {
+    // Reset all main variables
+    mainCompanyMoney = 500000;
+    totalCompaniesCreated = 0;
+    totalMoneyEarned = mainCompanyMoney;
+    researchPoints = 0;
+    for (const key in companyResources) companyResources[key] = 0;
+    companies.forEach(company => {
+        if (company.intervalId) clearInterval(company.intervalId);
+    });
+    companies = [];
+    // Remove all company boxes
+    const app = document.getElementById('app');
+    while (app.firstChild) app.removeChild(app.firstChild);
+    // Reset UI
+    updateMainDisplay();
+    updateStatistics();
+    updateResourceDisplay();
+    // Create initial company
+    createCompany();
+}
+
+// --- GAME PERSISTENCE FUNCTIONALITY ---
+function saveGameState() {
+    const gameState = {
+        mainCompanyMoney,
+        totalCompaniesCreated,
+        totalMoneyEarned,
+        researchPoints,
+        companyResources,
+        companies: companies.map(company => ({
+            name: company.name,
+            type: company.type,
+            tier: company.tier,
+            value: company.value,
+            counter: company.counter,
+            dividendRate: company.dividendRate,
+            upgradeLevel: company.upgrade.currentLevel
+        }))
+    };
+    localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
+}
+
+function loadGameState() {
+    const saved = localStorage.getItem('wilowest_game_state');
+    if (!saved) return false;
+    try {
+        const gameState = JSON.parse(saved);
+        mainCompanyMoney = gameState.mainCompanyMoney;
+        totalCompaniesCreated = gameState.totalCompaniesCreated;
+        totalMoneyEarned = gameState.totalMoneyEarned;
+        researchPoints = gameState.researchPoints;
+        for (const key in companyResources) companyResources[key] = gameState.companyResources[key] || 0;
+        // Remove all company boxes and clear intervals
+        companies.forEach(company => {
+            if (company.intervalId) clearInterval(company.intervalId);
+        });
+        companies = [];
+        const app = document.getElementById('app');
+        while (app.firstChild) app.removeChild(app.firstChild);
+        // Restore companies
+        gameState.companies.forEach(data => {
+            const box = document.createElement('div');
+            box.className = 'counter-box';
+            box.setAttribute('data-tier', data.tier);
+            box.innerHTML = `
+                <div class="company-info">
+                    <div class="companyHead" data-tier="${data.tier}">
+                        <div class="companyHead-left">
+                            <img src="../media/${companyTypes[data.type].icon}" class="companyImage">
+                            <h2 class="companyName">${data.name}</h2>
+                        </div>
+                        <span class="tier-badge" data-tier="${data.tier}">${data.tier === 0 ? `Nivel ${data.upgradeLevel}` : `Tier ${data.tier}`}</span>
+                    </div>
+                    <p class="mainCounter">$ 0.00</p>
+                </div>
+                <div class="company-actions">
+                    <button class="work">Trabajar</button>
+                    <button class="upgrade">Mejorar</button>
+                    <button class="merge" style="display: none;">Merge</button>
+                    <button class="sell">Vender</button>
+                </div>
+                <div class="company-details">
+                    <p>Company Value: <span class="valueCounter">0.00</span></p>
+                    <div class="dividendControl">
+                        Dividendos: <input type="range" min="0" max="100" value="0" class="dividendSlider">
+                        <span class="dividendPercentage">0%</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('app').appendChild(box);
+            const company = new Company(box, data.name, data.type, data.tier);
+            company.value = data.value;
+            company.counter = data.counter;
+            company.dividendRate = data.dividendRate;
+            company.upgrade.currentLevel = data.upgradeLevel;
+            company.updateDisplay();
+            company.updateButtons();
+            company.dividendSlider.value = data.dividendRate;
+            company.updateDividendDisplay();
+            company.applyUpgrade();
+            companies.push(company);
+        });
+        updateMainDisplay();
+        updateStatistics();
+        updateResourceDisplay();
+        return true;
+    } catch (e) {
+        console.error('Error loading game state:', e);
+        return false;
+    }
+}
+
+// --- AUTO-SAVE EVERY 1 MINUTE ---
+setInterval(saveGameState, 60000);
+
+// --- LOAD GAME ON STARTUP ---
 document.addEventListener('DOMContentLoaded', () => {
     const createCompanyButton = document.getElementById('createCompany');
     createCompanyButton.addEventListener('click', createCompany);
 
-    // Create initial company
-    createCompany();
+    // Load game state if available
+    if (!loadGameState()) {
+        // Create initial company only if there are no companies
+        if (companies.length === 0) {
+            createCompany();
+        }
+    }
 
     updateMainDisplay();
     updateStatistics();
@@ -528,4 +650,14 @@ document.addEventListener('DOMContentLoaded', () => {
             menu.classList.remove('active');
         }
     });
+
+    // Add restart button event
+    const restartBtn = document.getElementById('restartGame');
+    if (restartBtn) {
+        restartBtn.addEventListener('click', () => {
+            if (confirm('¿Estás seguro que deseas reiniciar el juego? ¡Perderás todo tu progreso!')) {
+                resetGameState();
+            }
+        });
+    }
 });
