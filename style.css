@@ -61,6 +61,10 @@ body {
     font-weight: bold;
     margin-bottom: 20px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .estadisticas {
@@ -393,4 +397,29 @@ button:disabled {
 
 .tier-badge[data-tier="3"] {
     background: linear-gradient(21deg, rgba(172, 173, 62, 1) 0%, rgba(199, 195, 87, 1) 50%, rgba(255, 255, 0, 1) 100%);
+}
+
+.resource-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin: 0 5px;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.resource-icon[alt="Money"] {
+    background: linear-gradient(21deg, rgba(88, 204, 82, 1) 0%, rgba(0, 140, 5, 1) 50%, rgba(28, 255, 32, 0.93) 100%);
+    -webkit-mask-image: url("../media/usd-circle.svg");
+    mask-image: url("../media/usd-circle.svg");
+}
+
+.resource-icon[alt="Research"] {
+    background: linear-gradient(216deg, rgba(82, 100, 204, 1) 0%, rgba(98, 78, 212, 1) 39%, rgba(255, 28, 217, 1) 100%);
+    -webkit-mask-image: url("../media/sparkles.svg");
+    mask-image: url("../media/sparkles.svg");
 }

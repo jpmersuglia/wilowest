@@ -2,6 +2,7 @@
 let mainCompanyMoney = 500000;
 let totalCompaniesCreated = 0;
 let totalMoneyEarned = mainCompanyMoney;
+let researchPoints = 0; // New variable for research points
 
 // Resource tracking
 let companyResources = {
@@ -91,17 +92,17 @@ class Company {
         this.upgrade = {
             currentLevel: 0,
             levels: {
-                0: { cost: 100, increment: 0, resource: 0 },
-                1: { cost: 500, increment: 1500000, resource: 1 },
-                2: { cost: 1000, increment: 20, resource: 2 },
-                3: { cost: 10000, increment: 30, resource: 3 },
-                4: { cost: 20000, increment: 40, resource: 4 },
-                5: { cost: 25000, increment: 50, resource: 5 },
-                6: { cost: 50000, increment: 55, resource: 6 },
-                7: { cost: 100000, increment: 60, resource: 7 },
-                8: { cost: 255000, increment: 75, resource: 8 },
-                9: { cost: 500000, increment: 85, resource: 9 },
-                10: { cost: 1000000, increment: 100, resource: 10 },
+                0: { cost: 100, increment: 0, resource: 0, investigation: 0 },
+                1: { cost: 500, increment: 15, resource: 1, investigation: 1 },
+                2: { cost: 1000, increment: 20, resource: 2, investigation: 1.5 },
+                3: { cost: 10000, increment: 30, resource: 3, investigation: 2 },
+                4: { cost: 20000, increment: 40, resource: 4, investigation: 2.5 },
+                5: { cost: 25000, increment: 50, resource: 5, investigation: 3 },
+                6: { cost: 50000, increment: 55, resource: 6, investigation: 5.5 },
+                7: { cost: 100000, increment: 60, resource: 7, investigation: 6 },
+                8: { cost: 255000, increment: 75, resource: 8, investigation: 8 },
+                9: { cost: 500000, increment: 85, resource: 9, investigation: 10 },
+                10: { cost: 1000000, increment: 100, resource: 10, investigation: 11 },
             },
             getNextCost: function() {
                 return this.levels[this.currentLevel]?.cost || 100;
@@ -111,6 +112,9 @@ class Company {
             },
             getResourceGeneration: function() {
                 return this.levels[this.currentLevel]?.resource || 0;
+            },
+            getInvestigationChance: function() {
+                return this.levels[this.currentLevel]?.investigation || 0;
             }
         };
         this.intervalId = null;
@@ -131,6 +135,21 @@ class Company {
                 return 175;
             case 3:
                 return 220;
+            default:
+                return 0;
+        }
+    }
+
+    getInvestigationChance() {
+        switch(this.tier) {
+            case 0:
+                return this.upgrade.getInvestigationChance();
+            case 1:
+                return 15;
+            case 2:
+                return 25;
+            case 3:
+                return 50;
             default:
                 return 0;
         }
@@ -206,13 +225,22 @@ class Company {
 
     incrementCounter() {
         const dividend = this.dividendRate / 100;
-        const companyEarnings = 1 * (1 - dividend);
-        const mainCompanyDividend = 1 * dividend;
+        const baseEarnings = 1;
+        const resourceIncome = this.calculateResourceIncome();
+        const totalEarnings = baseEarnings + resourceIncome;
+        const companyEarnings = totalEarnings * (1 - dividend);
+        const mainCompanyDividend = totalEarnings * dividend;
 
         this.counter += companyEarnings;
         this.value += companyEarnings;
         mainCompanyMoney += mainCompanyDividend;
         totalMoneyEarned += mainCompanyDividend;
+
+        // Check for research points generation
+        const investigationChance = this.getInvestigationChance();
+        if (Math.random() * 100 < investigationChance) {
+            researchPoints++;
+        }
 
         this.updateDisplay();
         this.updateButtons();
@@ -327,14 +355,21 @@ class Company {
         if (increment > 0) {
             this.intervalId = setInterval(() => {
                 const dividend = this.dividendRate / 100;
-                const companyEarnings = increment * (1 - dividend);
-                const mainCompanyDividend = increment * dividend;
                 const resourceIncome = this.calculateResourceIncome();
+                const totalEarnings = increment + resourceIncome;
+                const companyEarnings = totalEarnings * (1 - dividend);
+                const mainCompanyDividend = totalEarnings * dividend;
 
-                this.value += companyEarnings + resourceIncome;
-                this.counter += companyEarnings + resourceIncome;
+                this.value += companyEarnings;
+                this.counter += companyEarnings;
                 mainCompanyMoney += mainCompanyDividend;
                 totalMoneyEarned += mainCompanyDividend;
+
+                // Check for research points generation
+                const investigationChance = this.getInvestigationChance();
+                if (Math.random() * 100 < investigationChance) {
+                    researchPoints++;
+                }
 
                 this.updateDisplay();
                 this.updateButtons();
@@ -464,7 +499,7 @@ function updateStatistics() {
 
 // Actualizar el contador principal
 function updateMainDisplay() {
-    document.getElementById('mainCompanyMoney').textContent = `Dinero: $${mainCompanyMoney.toFixed(2)}`; // Mostrar con decimales
+    document.getElementById('mainCompanyMoney').innerHTML = `<img src="../media/usd-circle.svg" alt="Money" class="resource-icon"> ${mainCompanyMoney.toFixed(2)} <img src="../media/sparkles.svg" alt="Research" class="resource-icon"> ${researchPoints}`;
     document.getElementById('createCompany').disabled = mainCompanyMoney < 50000 || companies.length >= 5;
 }
 
