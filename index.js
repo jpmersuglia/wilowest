@@ -462,7 +462,7 @@ function createCompany() {
         <div class="company-info">
             <div class="companyHead" data-tier="0">
                 <div class="companyHead-left">
-                    <img src="../media/${companyTypes[type].icon}" class="companyImage">
+                    <img src="media/${companyTypes[type].icon}" class="companyImage">
                     <h2 class="companyName">${name}</h2>
                 </div>
                 <span class="tier-badge" data-tier="0">Nivel 0</span>
@@ -499,7 +499,7 @@ function updateStatistics() {
 
 // Actualizar el contador principal
 function updateMainDisplay() {
-    document.getElementById('mainCompanyMoney').innerHTML = `<img src="../media/usd-circle.svg" alt="Money" class="resource-icon"> ${mainCompanyMoney.toFixed(2)} <img src="../media/sparkles.svg" alt="Research" class="resource-icon"> ${researchPoints}`;
+    document.getElementById('mainCompanyMoney').innerHTML = `<img src="media/usd-circle.svg" alt="Money" class="resource-icon"> ${mainCompanyMoney.toFixed(2)} <img src="media/sparkles.svg" alt="Research" class="resource-icon"> ${researchPoints}`;
     document.getElementById('createCompany').disabled = mainCompanyMoney < 50000 || companies.length >= 5;
 }
 
@@ -526,7 +526,7 @@ function resetGameState() {
     createCompany();
 }
 
-// --- GAME PERSISTENCE FUNCTIONALITY ---
+// --- SAVE GAME STATE TO LOCALSTORAGE ---
 function saveGameState() {
     const gameState = {
         mainCompanyMoney,
@@ -573,7 +573,7 @@ function loadGameState() {
                 <div class="company-info">
                     <div class="companyHead" data-tier="${data.tier}">
                         <div class="companyHead-left">
-                            <img src="../media/${companyTypes[data.type].icon}" class="companyImage">
+                            <img src="media/${companyTypes[data.type].icon}" class="companyImage">
                             <h2 class="companyName">${data.name}</h2>
                         </div>
                         <span class="tier-badge" data-tier="${data.tier}">${data.tier === 0 ? `Nivel ${data.upgradeLevel}` : `Tier ${data.tier}`}</span>
@@ -658,6 +658,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirm('¿Estás seguro que deseas reiniciar el juego? ¡Perderás todo tu progreso!')) {
                 resetGameState();
             }
+        });
+    }
+
+    // Navigation buttons
+    const investigationTreeBtn = document.getElementById('investigationTreeBtn');
+    if (investigationTreeBtn) {
+        investigationTreeBtn.addEventListener('click', () => {
+            window.location.href = 'investigationtree.html';
         });
     }
 });

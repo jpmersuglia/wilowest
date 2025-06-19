@@ -453,3 +453,144 @@ button:disabled {
     margin: 0;
     display: block;
 }
+
+#investigationTreePage {
+    padding: 2rem;
+    background: #fff;
+    border-radius: 12px;
+    max-width: 900px;
+    margin: 2rem auto;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+.investigation-tree {
+    margin-bottom: 2rem;
+    border-left: 4px solid #4a90e2;
+    padding-left: 1.5rem;
+}
+.investigation-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2d3a4a;
+}
+.investigation-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f7fafd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 4px rgba(74,144,226,0.07);
+}
+.investigation-info {
+    flex: 1;
+}
+.investigation-name {
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+.investigation-desc {
+    font-size: 0.95rem;
+    color: #555;
+    margin: 0.2rem 0 0.5rem 0;
+}
+.investigation-cost {
+    font-size: 0.95rem;
+    color: #4a90e2;
+    margin-bottom: 0.3rem;
+}
+.investigation-effect {
+    font-size: 0.95rem;
+    color: #27ae60;
+}
+.investigation-btn {
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.investigation-btn:disabled,
+.investigation-btn.owned {
+    background: #bfc9d1;
+    cursor: not-allowed;
+}
+.investigation-btn.owned {
+    color: #fff;
+    font-weight: 600;
+}
+@media (max-width: 700px) {
+    #investigationTreePage { padding: 1rem; }
+    .investigation-item { flex-direction: column; align-items: flex-start; }
+}
+
+/* Sidebar navigation styles */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 0 12px 12px 0;
+    padding: 1rem 0.5rem;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+}
+
+.sidebar-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.sidebar-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-btn.active {
+    background: #4a90e2;
+    color: #fff;
+    font-weight: 600;
+}
+
+.sidebar-btn:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 700px) {
+    #investigationTreePage { padding: 1rem; }
+    .investigation-item { flex-direction: column; align-items: flex-start; }
+    .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        transform: none;
+        border-radius: 12px 12px 0 0;
+        padding: 0.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .sidebar-btn {
+        width: auto;
+        margin-bottom: 0;
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+    }
+}
