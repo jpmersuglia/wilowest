@@ -117,13 +117,27 @@ function loadGameState() {
 
 // --- SAVE GAME STATE TO LOCALSTORAGE ---
 function saveGameState() {
+    // First, get the existing game state to preserve companies data
+    const existingState = localStorage.getItem('wilowest_game_state');
+    let existingGameState = {};
+    
+    if (existingState) {
+        try {
+            existingGameState = JSON.parse(existingState);
+        } catch (e) {
+            console.error('Error parsing existing game state:', e);
+        }
+    }
+    
     const gameState = {
         mainCompanyMoney,
         totalCompaniesCreated,
         totalMoneyEarned,
         researchPoints,
         companyResources,
-        investigationTrees
+        investigationTrees,
+        // Preserve companies data from existing state
+        companies: existingGameState.companies || []
     };
     localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
 }
@@ -168,6 +182,28 @@ function renderInvestigationTrees() {
     if (!container) return;
     
     container.innerHTML = '';
+    
+    // Create modal container if it doesn't exist
+    let modalContainer = document.getElementById('investigationModal');
+    if (!modalContainer) {
+        modalContainer = document.createElement('div');
+        modalContainer.className = 'investigation-modal';
+        modalContainer.id = 'investigationModal';
+        modalContainer.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-icon" id="modalIcon"></div>
+                    <h3 class="modal-title" id="modalTitle"></h3>
+                </div>
+                <p class="modal-subtitle" id="modalSubtitle"></p>
+                <div class="modal-cost" id="modalCost"></div>
+                <div class="modal-effect" id="modalEffect"></div>
+                <div class="modal-actions" id="modalActions"></div>
+            </div>
+        `;
+        document.body.appendChild(modalContainer);
+    }
+    
     Object.entries(investigationTrees).forEach(([type, items]) => {
         const treeDiv = document.createElement('div');
         treeDiv.className = 'investigation-tree';
@@ -177,67 +213,114 @@ function renderInvestigationTrees() {
         title.textContent = type;
         treeDiv.appendChild(title);
 
+        const gridDiv = document.createElement('div');
+        gridDiv.className = 'investigation-grid';
+
         items.forEach((item, idx) => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'investigation-item';
-
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'investigation-info';
-
-            const name = document.createElement('div');
-            name.className = 'investigation-name';
-            name.textContent = item.name;
-
-            const desc = document.createElement('div');
-            desc.className = 'investigation-desc';
-            desc.textContent = item.description;
-
-            const cost = document.createElement('div');
-            cost.className = 'investigation-cost';
-            cost.textContent = `Costo: $${item.cost[0].toLocaleString()} + ${item.cost[1]} Puntos de Investigación`;
-
-            const effect = document.createElement('div');
-            effect.className = 'investigation-effect';
-            effect.textContent = `Efecto: +${item.effect}%`;
-
-            infoDiv.appendChild(name);
-            infoDiv.appendChild(desc);
-            infoDiv.appendChild(cost);
-            infoDiv.appendChild(effect);
-
-            itemDiv.appendChild(infoDiv);
-
-            const btn = document.createElement('button');
-            btn.className = 'investigation-btn';
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'investigation-icon';
+            
+            // Determine color scheme
             if (item.owned) {
-                btn.textContent = 'Investigado';
-                btn.disabled = true;
-                btn.classList.add('owned');
+                iconDiv.classList.add('green');
+            } else if (mainCompanyMoney >= item.cost[0] && researchPoints >= item.cost[1]) {
+                iconDiv.classList.add('orange');
             } else {
-                btn.textContent = 'Investigar';
-                btn.disabled = mainCompanyMoney < item.cost[0] || researchPoints < item.cost[1];
-                btn.onclick = () => {
-                    if (mainCompanyMoney >= item.cost[0] && researchPoints >= item.cost[1]) {
-                        mainCompanyMoney -= item.cost[0];
-                        researchPoints -= item.cost[1];
-                        item.owned = true;
-                        
-                        // Apply the effect (you can implement this later)
-                        console.log(`Applied ${item.effect}% effect to ${item.companyType} companies`);
-                        
-                        updateMainDisplay();
-                        saveGameState();
-                        renderInvestigationTrees();
-                    }
-                };
+                iconDiv.classList.add('red');
             }
-            itemDiv.appendChild(btn);
-
-            treeDiv.appendChild(itemDiv);
+            
+            // Add technology icon
+            iconDiv.innerHTML = `<img src="media/technology-icon.svg" alt="Technology">`;
+            
+            // Add click handler
+            iconDiv.addEventListener('click', () => {
+                showInvestigationModal(item, type);
+            });
+            
+            gridDiv.appendChild(iconDiv);
         });
 
+        treeDiv.appendChild(gridDiv);
         container.appendChild(treeDiv);
     });
+}
+
+function showInvestigationModal(item, type) {
+    const modal = document.getElementById('investigationModal');
+    const modalIcon = document.getElementById('modalIcon');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const modalCost = document.getElementById('modalCost');
+    const modalEffect = document.getElementById('modalEffect');
+    const modalActions = document.getElementById('modalActions');
+    
+    // Set modal content
+    modalTitle.textContent = item.name;
+    modalSubtitle.textContent = item.description;
+    
+    // Set icon with appropriate color
+    modalIcon.innerHTML = `<img src="media/technology-icon.svg" alt="Technology">`;
+    modalIcon.className = 'modal-icon';
+    if (item.owned) {
+        modalIcon.classList.add('green');
+    } else if (mainCompanyMoney >= item.cost[0] && researchPoints >= item.cost[1]) {
+        modalIcon.classList.add('orange');
+    } else {
+        modalIcon.classList.add('red');
+    }
+    
+    // Set cost
+    modalCost.innerHTML = `
+        <span class="cost-money">💰 $${item.cost[0].toLocaleString()}</span>
+        <span class="cost-ip">🔬 ${item.cost[1]} Puntos de Investigación</span>
+    `;
+    
+    // Set effect
+    modalEffect.textContent = `Efecto: Aumenta la producción en ${item.effect}%`;
+    
+    // Set actions
+    if (item.owned) {
+        modalActions.innerHTML = `
+            <button class="modal-btn owned">Investigado</button>
+            <button class="modal-btn cancel" onclick="closeInvestigationModal()">Cerrar</button>
+        `;
+    } else {
+        const canAfford = mainCompanyMoney >= item.cost[0] && researchPoints >= item.cost[1];
+        modalActions.innerHTML = `
+            <button class="modal-btn cancel" onclick="closeInvestigationModal()">Cancelar</button>
+            <button class="modal-btn buy" ${!canAfford ? 'disabled' : ''} onclick="purchaseInvestigation('${type}', ${item.cost[0]}, ${item.cost[1]}, ${item.effect})">Comprar</button>
+        `;
+    }
+    
+    // Show modal
+    modal.classList.add('active');
+}
+
+function closeInvestigationModal() {
+    const modal = document.getElementById('investigationModal');
+    modal.classList.remove('active');
+}
+
+function purchaseInvestigation(type, moneyCost, ipCost, effect) {
+    if (mainCompanyMoney >= moneyCost && researchPoints >= ipCost) {
+        mainCompanyMoney -= moneyCost;
+        researchPoints -= ipCost;
+        
+        // Find and update the item
+        const item = investigationTrees[type].find(item => 
+            item.cost[0] === moneyCost && item.cost[1] === ipCost && item.effect === effect
+        );
+        
+        if (item) {
+            item.owned = true;
+            console.log(`Applied ${item.effect}% effect to ${item.companyType} companies`);
+        }
+        
+        updateMainDisplay();
+        saveGameState();
+        renderInvestigationTrees();
+        closeInvestigationModal();
+    }
 }
 
 // --- NAVIGATION FUNCTIONS ---
@@ -262,8 +345,17 @@ function resetGameState() {
             });
         });
         
-        // Save reset state
-        saveGameState();
+        // Clear companies array when resetting
+        const gameState = {
+            mainCompanyMoney,
+            totalCompaniesCreated,
+            totalMoneyEarned,
+            researchPoints,
+            companyResources,
+            investigationTrees,
+            companies: [] // Clear companies on reset
+        };
+        localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
         
         // Update displays
         updateMainDisplay();
@@ -314,6 +406,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (restartBtn) {
         restartBtn.addEventListener('click', resetGameState);
     }
+
+    // Modal click outside to close
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('investigationModal');
+        if (modal && e.target === modal) {
+            closeInvestigationModal();
+        }
+    });
 
     // Auto-save every minute
     setInterval(saveGameState, 60000);
