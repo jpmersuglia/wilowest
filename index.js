@@ -518,6 +518,19 @@ function resetGameState() {
     // Remove all company boxes
     const app = document.getElementById('app');
     while (app.firstChild) app.removeChild(app.firstChild);
+    
+    // Clear investigation data when resetting
+    const gameState = {
+        mainCompanyMoney,
+        totalCompaniesCreated,
+        totalMoneyEarned,
+        researchPoints,
+        companyResources,
+        companies: [],
+        purchasedInvestigations: [] // Clear investigation data on reset
+    };
+    localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
+    
     // Reset UI
     updateMainDisplay();
     updateStatistics();
@@ -528,6 +541,18 @@ function resetGameState() {
 
 // --- SAVE GAME STATE TO LOCALSTORAGE ---
 function saveGameState() {
+    // First, get the existing game state to preserve investigation data
+    const existingState = localStorage.getItem('wilowest_game_state');
+    let existingGameState = {};
+    
+    if (existingState) {
+        try {
+            existingGameState = JSON.parse(existingState);
+        } catch (e) {
+            console.error('Error parsing existing game state:', e);
+        }
+    }
+    
     const gameState = {
         mainCompanyMoney,
         totalCompaniesCreated,
@@ -542,7 +567,9 @@ function saveGameState() {
             counter: company.counter,
             dividendRate: company.dividendRate,
             upgradeLevel: company.upgrade.currentLevel
-        }))
+        })),
+        // Preserve investigation data from existing state
+        purchasedInvestigations: existingGameState.purchasedInvestigations || []
     };
     localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
 }
