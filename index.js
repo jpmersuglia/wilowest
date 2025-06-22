@@ -661,10 +661,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Add save button event
+    const saveBtn = document.getElementById('saveGame');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            saveGameState();
+            // Show a brief confirmation message
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Guardado';
+            saveBtn.style.background = '#4caf50';
+            setTimeout(() => {
+                saveBtn.innerHTML = originalText;
+                saveBtn.style.background = '#2196f3';
+            }, 2000);
+        });
+    }
+
     // Navigation buttons
     const investigationTreeBtn = document.getElementById('investigationTreeBtn');
     if (investigationTreeBtn) {
         investigationTreeBtn.addEventListener('click', () => {
+            // Save game state before navigating
+            saveGameState();
             window.location.href = 'investigationtree.html';
         });
     }
