@@ -227,9 +227,25 @@ class Company {
         const dividend = this.dividendRate / 100;
         const baseEarnings = 1;
         const resourceIncome = this.calculateResourceIncome();
-        const totalEarnings = baseEarnings + resourceIncome;
+        
+        // Calculate investigation bonus
+        const investigationBonus = getInvestigationBonus(this.type);
+        const baseIncrement = this.getTierIncrement();
+        const bonusAmount = (baseIncrement * investigationBonus) / 100;
+        
+        console.log(`=== ${this.name} (${this.type}) EARNINGS CALCULATION ===`);
+        console.log(`Base increment: ${baseIncrement}`);
+        console.log(`Investigation bonus: ${investigationBonus}%`);
+        console.log(`Bonus amount: ${bonusAmount.toFixed(2)}`);
+        console.log(`Resource income: ${resourceIncome.toFixed(2)}`);
+        
+        const totalEarnings = baseEarnings + resourceIncome + bonusAmount;
         const companyEarnings = totalEarnings * (1 - dividend);
         const mainCompanyDividend = totalEarnings * dividend;
+
+        console.log(`Total earnings: ${totalEarnings.toFixed(2)}`);
+        console.log(`Company earnings: ${companyEarnings.toFixed(2)}`);
+        console.log(`Main company dividend: ${mainCompanyDividend.toFixed(2)}`);
 
         this.counter += companyEarnings;
         this.value += companyEarnings;
@@ -356,7 +372,12 @@ class Company {
             this.intervalId = setInterval(() => {
                 const dividend = this.dividendRate / 100;
                 const resourceIncome = this.calculateResourceIncome();
-                const totalEarnings = increment + resourceIncome;
+                
+                // Calculate investigation bonus
+                const investigationBonus = getInvestigationBonus(this.type);
+                const bonusAmount = (increment * investigationBonus) / 100;
+                
+                const totalEarnings = increment + resourceIncome + bonusAmount;
                 const companyEarnings = totalEarnings * (1 - dividend);
                 const mainCompanyDividend = totalEarnings * dividend;
 
@@ -714,3 +735,92 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- INVESTIGATION BONUS CALCULATION ---
+function getInvestigationBonus(companyType) {
+    let totalBonus = 0;
+    
+    // Get the current game state to check purchased investigations
+    const saved = localStorage.getItem('wilowest_game_state');
+    if (saved) {
+        try {
+            const gameState = JSON.parse(saved);
+            const purchasedInvestigations = gameState.purchasedInvestigations || [];
+            
+            // Map company types to their investigation IDs
+            const companyTypeMap = {
+                'Petroleo': '1',
+                'Transporte': '2', 
+                'Banco': '3',
+                'Metalurgica': '4',
+                'Mineria': '5',
+                'Telecomunicaciones': '6'
+            };
+            
+            const companyNumber = companyTypeMap[companyType];
+            if (companyNumber) {
+                // Find all purchased investigations for this company type
+                purchasedInvestigations.forEach(id => {
+                    if (id.startsWith(companyNumber + '.')) {
+                        // Get the investigation data to find the effect percentage
+                        const investigationData = getInvestigationDataById(id);
+                        if (investigationData) {
+                            totalBonus += investigationData.effect;
+                            console.log(`Applied ${investigationData.effect}% bonus from ${investigationData.name} (${id})`);
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error calculating investigation bonus:', e);
+        }
+    }
+    
+    return totalBonus;
+}
+
+function getInvestigationDataById(id) {
+    // Investigation tree data structure (same as in investigationtree.js)
+    const investigationTrees = {
+        Petroleo: [
+            { id: "1.1.1", name: "Perforación Avanzada", effect: 5 },
+            { id: "1.1.2", name: "Refinamiento Mejorado", effect: 7 },
+            { id: "1.2.1", name: "Exploración Submarina", effect: 10 }
+        ],
+        Transporte: [
+            { id: "2.1.1", name: "Rutas Optimizadas", effect: 5 },
+            { id: "2.1.2", name: "Flota Modernizada", effect: 8 },
+            { id: "2.2.1", name: "Logística Inteligente", effect: 12 }
+        ],
+        Banco: [
+            { id: "3.1.1", name: "Algoritmos de Riesgo", effect: 5 },
+            { id: "3.1.2", name: "Banca Digital", effect: 7 },
+            { id: "3.2.1", name: "Inversiones Globales", effect: 15 }
+        ],
+        Metalurgica: [
+            { id: "4.1.1", name: "Fundición Eficiente", effect: 5 },
+            { id: "4.1.2", name: "Aleaciones Avanzadas", effect: 8 },
+            { id: "4.2.1", name: "Automatización Industrial", effect: 13 }
+        ],
+        Mineria: [
+            { id: "5.1.1", name: "Explosivos Mejorados", effect: 5 },
+            { id: "5.1.2", name: "Maquinaria Pesada", effect: 9 },
+            { id: "5.2.1", name: "Exploración Geológica", effect: 16 }
+        ],
+        Telecomunicaciones: [
+            { id: "6.1.1", name: "Fibra Óptica", effect: 5 },
+            { id: "6.1.2", name: "5G Network", effect: 10 },
+            { id: "6.2.1", name: "Satélites de Comunicación", effect: 20 }
+        ]
+    };
+    
+    // Search for the investigation in all company types
+    for (const [companyType, investigations] of Object.entries(investigationTrees)) {
+        const investigation = investigations.find(inv => inv.id === id);
+        if (investigation) {
+            return investigation;
+        }
+    }
+    
+    return null;
+}
