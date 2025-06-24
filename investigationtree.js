@@ -302,7 +302,10 @@ function saveGameState() {
         companyResources,
         purchasedInvestigations, // Only save the IDs of purchased technologies
         // Preserve companies data from existing state
-        companies: existingGameState.companies || []
+        companies: existingGameState.companies || [],
+        // Preserve RRHH data from existing state
+        candidates: existingGameState.candidates || [],
+        hiredOfficials: existingGameState.hiredOfficials || []
     };
     
     console.log('Saving game state:', gameState);
@@ -567,7 +570,9 @@ function resetGameState() {
             researchPoints,
             companyResources,
             purchasedInvestigations: [], // Empty array for no purchased investigations
-            companies: [] // Clear companies on reset
+            companies: [], // Clear companies on reset
+            candidates: [],
+            hiredOfficials: []
         };
         localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
         
@@ -627,6 +632,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const companiesBtn = document.getElementById('companiesBtn');
     if (companiesBtn) {
         companiesBtn.addEventListener('click', navigateToCompanies);
+    }
+
+    // RRHH navigation button
+    const rrhhBtn = document.getElementById('rrhhBtn');
+    if (rrhhBtn) {
+        rrhhBtn.addEventListener('click', () => {
+            // Save game state before navigating
+            saveGameState();
+            window.location.href = 'rrhh.html';
+        });
     }
 
     // Restart button

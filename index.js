@@ -13,6 +13,9 @@ let companyResources = {
     carbon: 0
 };
 
+// RRHH variables
+let hiredOfficials = [];
+
 // Resource prices (base price per unit)
 const resourcePrices = {
     petroleo: 10.50,
@@ -166,6 +169,23 @@ class Company {
         return totalIncome;
     }
 
+    calculateOfficialBonus() {
+        let totalBonus = 0;
+        
+        // Get officials assigned to this company
+        const companyOfficials = hiredOfficials.filter(official => 
+            official.workingIn === this.name && 
+            (!official.trainingUntil || new Date() >= new Date(official.trainingUntil))
+        );
+        
+        // Calculate bonus from each official (0.01% per stat point)
+        companyOfficials.forEach(official => {
+            totalBonus += official.totalStats * 0.01;
+        });
+        
+        return totalBonus;
+    }
+
     bindEvents() {
         this.workButton.addEventListener('click', () => this.incrementCounter());
         this.upgradeButton.addEventListener('click', () => this.handleUpgrade());
@@ -233,13 +253,19 @@ class Company {
         const baseIncrement = this.getTierIncrement();
         const bonusAmount = (baseIncrement * investigationBonus) / 100;
         
+        // Calculate official bonus
+        const officialBonus = this.calculateOfficialBonus();
+        const officialBonusAmount = (baseIncrement * officialBonus) / 100;
+        
         console.log(`=== ${this.name} (${this.type}) EARNINGS CALCULATION ===`);
         console.log(`Base increment: ${baseIncrement}`);
         console.log(`Investigation bonus: ${investigationBonus}%`);
         console.log(`Bonus amount: ${bonusAmount.toFixed(2)}`);
+        console.log(`Official bonus: ${officialBonus}%`);
+        console.log(`Official bonus amount: ${officialBonusAmount.toFixed(2)}`);
         console.log(`Resource income: ${resourceIncome.toFixed(2)}`);
         
-        const totalEarnings = baseEarnings + resourceIncome + bonusAmount;
+        const totalEarnings = baseEarnings + resourceIncome + bonusAmount + officialBonusAmount;
         const companyEarnings = totalEarnings * (1 - dividend);
         const mainCompanyDividend = totalEarnings * dividend;
 
@@ -377,7 +403,11 @@ class Company {
                 const investigationBonus = getInvestigationBonus(this.type);
                 const bonusAmount = (increment * investigationBonus) / 100;
                 
-                const totalEarnings = increment + resourceIncome + bonusAmount;
+                // Calculate official bonus
+                const officialBonus = this.calculateOfficialBonus();
+                const officialBonusAmount = (increment * officialBonus) / 100;
+                
+                const totalEarnings = increment + resourceIncome + bonusAmount + officialBonusAmount;
                 const companyEarnings = totalEarnings * (1 - dividend);
                 const mainCompanyDividend = totalEarnings * dividend;
 
@@ -532,6 +562,10 @@ function resetGameState() {
     totalMoneyEarned = mainCompanyMoney;
     researchPoints = 0;
     for (const key in companyResources) companyResources[key] = 0;
+    
+    // Reset RRHH data
+    hiredOfficials = [];
+    
     companies.forEach(company => {
         if (company.intervalId) clearInterval(company.intervalId);
     });
@@ -548,7 +582,9 @@ function resetGameState() {
         researchPoints,
         companyResources,
         companies: [],
-        purchasedInvestigations: [] // Clear investigation data on reset
+        purchasedInvestigations: [], // Clear investigation data on reset
+        candidates: [], // Clear RRHH data on reset
+        hiredOfficials: [] // Clear RRHH data on reset
     };
     localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
     
@@ -590,7 +626,10 @@ function saveGameState() {
             upgradeLevel: company.upgrade.currentLevel
         })),
         // Preserve investigation data from existing state
-        purchasedInvestigations: existingGameState.purchasedInvestigations || []
+        purchasedInvestigations: existingGameState.purchasedInvestigations || [],
+        // Preserve RRHH data from existing state
+        candidates: existingGameState.candidates || [],
+        hiredOfficials: existingGameState.hiredOfficials || []
     };
     localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
 }
@@ -605,6 +644,10 @@ function loadGameState() {
         totalMoneyEarned = gameState.totalMoneyEarned;
         researchPoints = gameState.researchPoints;
         for (const key in companyResources) companyResources[key] = gameState.companyResources[key] || 0;
+        
+        // Load RRHH data
+        hiredOfficials = gameState.hiredOfficials || [];
+        
         // Remove all company boxes and clear intervals
         companies.forEach(company => {
             if (company.intervalId) clearInterval(company.intervalId);
@@ -732,6 +775,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Save game state before navigating
             saveGameState();
             window.location.href = 'investigationtree.html';
+        });
+    }
+
+    // RRHH navigation button
+    const rrhhBtn = document.getElementById('rrhhBtn');
+    if (rrhhBtn) {
+        rrhhBtn.addEventListener('click', () => {
+            // Save game state before navigating
+            saveGameState();
+            window.location.href = 'rrhh.html';
         });
     }
 });

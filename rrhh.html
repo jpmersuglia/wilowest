@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursos Humanos - Wilowest</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <button class="menu-toggle">☰</button>
+    <div class="menu">
+        <div class="menuMainData">
+            <h1>Compañía Principal</h1>
+            <p id="mainCompanyMoney">$ 0</p>
+        </div>
+        <div class="estadisticas">
+            <h2>Estadísticas</h2>
+            <p id="totalCompanies">Compañías creadas: 0</p>
+            <p id="totalMoneyEarned">Dinero total ganado: $0</p>
+        </div>
+        <div class="recursos">
+            <h2>Recursos</h2>
+            <div id="resourceDisplay">
+                <!-- Los recursos se mostrarán aquí -->
+            </div>
+        </div>
+        <div class="vistas">
+            <ul>
+                <li><a href="../tech" class="listItem">Tecnología</a></li>
+                <li><a href="../rrhh" class="listItem">RRHH</a></li>
+            </ul>
+        </div>
+        <button id="saveGame" class="save-btn" title="Guardar progreso">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17,21 17,13 7,13 7,21"/>
+                <polyline points="7,3 7,8 15,8"/>
+            </svg>
+            Guardar
+        </button>
+        <button id="restartGame" class="restart-btn" title="Reiniciar juego">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            Reset Game
+        </button>
+    </div>
+
+    <div class="main">
+        <aside class="sidebar">
+            <button id="companiesBtn" class="sidebar-btn" title="Compañías">
+                <img src="media/companies-icon.svg" alt="Compañías" class="nav-icon">
+            </button>
+            <button id="investigationTreeBtn" class="sidebar-btn" title="Árbol de Investigación">
+                <img src="media/research-icon.svg" alt="Investigación" class="nav-icon">
+            </button>
+            <button id="rrhhBtn" class="sidebar-btn active" title="Recursos Humanos">
+                <img src="media/human-resources-icon.svg" alt="RRHH" class="nav-icon">
+            </button>
+        </aside>
+        
+        <main id="mainContent">
+            <section id="rrhhPage">
+                <h1>Recursos Humanos</h1>
+                
+                <!-- Sección de búsqueda de candidatos -->
+                <div class="search-section">
+                    <h2>Buscar Candidatos</h2>
+                    <div class="search-controls">
+                        <select id="specializationFilter" class="search-select">
+                            <option value="">Todas las especializaciones</option>
+                            <option value="Petroleo">Petróleo</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Banco">Banco</option>
+                            <option value="Metalurgica">Metalúrgica</option>
+                            <option value="Mineria">Minería</option>
+                            <option value="Telecomunicaciones">Telecomunicaciones</option>
+                        </select>
+                        <button id="searchCandidatesBtn" class="search-btn">
+                            <img src="media/search-icon.svg" alt="Search" class="search-icon">
+                            Buscar Candidatos
+                        </button>
+                        <button id="testStateBtn" class="search-btn" style="background: #ff9800;">
+                            Test Estado
+                        </button>
+                    </div>
+                    <div id="searchProgress" class="search-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <p>Buscando candidatos... <span id="searchTimeLeft">60</span>s</p>
+                    </div>
+                </div>
+
+                <!-- Sección de candidatos disponibles -->
+                <div class="candidates-section">
+                    <h2>Candidatos Disponibles</h2>
+                    <div id="candidatesContainer" class="candidates-container">
+                        <!-- Los candidatos se mostrarán aquí -->
+                    </div>
+                </div>
+
+                <!-- Sección de oficiales contratados -->
+                <div class="hired-section">
+                    <h2>Oficiales Contratados</h2>
+                    <div id="hiredOfficialsContainer" class="hired-officials-container">
+                        <!-- Los oficiales contratados se mostrarán aquí -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="rrhh.js"></script>
+</body>
+</html> 

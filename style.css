@@ -818,3 +818,450 @@ button:disabled {
 .sidebar-btn.active .nav-icon {
     filter: brightness(0) invert(1);
 }
+
+/* RRHH Page Styles */
+#rrhhPage {
+    padding: 2rem;
+    background: #1a1a1a;
+    border-radius: 12px;
+    max-width: 1200px;
+    margin: 2rem auto;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    color: #fff;
+}
+
+#rrhhPage h1 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+}
+
+#rrhhPage h2 {
+    color: #4caf50;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #335428;
+    padding-bottom: 0.5rem;
+}
+
+/* Search Section */
+.search-section {
+    background-color: #1a1a1a;
+    border: 2px solid #335428;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.search-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-select {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px;
+    background-color: #0f0f0f;
+    border: 1px solid #335428;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.search-select:focus {
+    outline: none;
+    border-color: #4caf50;
+}
+
+.search-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(45deg, #4caf50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #45a049, #4caf50);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.search-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.search-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+/* Search Progress */
+.search-progress {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #0f0f0f;
+    border-radius: 8px;
+    border: 1px solid #335428;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #45a049);
+    width: 0%;
+    transition: width 1s linear;
+}
+
+.search-progress p {
+    text-align: center;
+    margin: 0;
+    color: #4caf50;
+    font-weight: bold;
+}
+
+/* Candidates and Hired Sections */
+.candidates-section,
+.hired-section {
+    background-color: #1a1a1a;
+    border: 2px solid #335428;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.candidates-container,
+.hired-officials-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.no-candidates,
+.no-officials {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    grid-column: 1 / -1;
+    padding: 40px;
+}
+
+/* Candidate and Official Cards */
+.candidate-card,
+.hired-official-card {
+    background-color: #0f0f0f;
+    border: 2px solid #335428;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.candidate-card:hover,
+.hired-official-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    border-color: #4caf50;
+}
+
+.candidate-card::before,
+.hired-official-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4caf50, #45a049);
+}
+
+/* Card Headers */
+.candidate-header,
+.official-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #335428;
+}
+
+.candidate-avatar,
+.official-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #4caf50, #45a049);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.avatar-img {
+    width: 32px;
+    height: 32px;
+    filter: brightness(0) invert(1);
+}
+
+.candidate-info,
+.official-info {
+    flex: 1;
+}
+
+.candidate-name,
+.official-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    margin: 0 0 5px 0;
+}
+
+.candidate-role,
+.official-role {
+    font-size: 0.9rem;
+    color: #4caf50;
+    margin: 0 0 3px 0;
+    font-weight: bold;
+}
+
+.candidate-specialization,
+.official-specialization {
+    font-size: 0.8rem;
+    color: #888;
+    margin: 0 0 3px 0;
+}
+
+.official-company {
+    font-size: 0.8rem;
+    color: #ff9800;
+    margin: 0;
+    font-weight: bold;
+}
+
+.candidate-status,
+.official-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.candidate-status.available,
+.official-status.active {
+    background-color: #4caf50;
+    color: white;
+}
+
+.candidate-status.training,
+.official-status.training {
+    background-color: #ff9800;
+    color: white;
+}
+
+/* Stats Section */
+.candidate-stats,
+.official-stats {
+    margin-bottom: 20px;
+}
+
+.candidate-stats h4,
+.official-stats h4 {
+    color: #4caf50;
+    margin: 0 0 15px 0;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #1a1a1a;
+    border-radius: 6px;
+    border: 1px solid #335428;
+}
+
+.stat-name {
+    font-size: 0.8rem;
+    color: #ccc;
+}
+
+.stat-value {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #4caf50;
+}
+
+.total-stats {
+    text-align: center;
+    padding: 10px;
+    background-color: #1a1a1a;
+    border-radius: 6px;
+    border: 1px solid #335428;
+}
+
+.total-stats strong {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.bonus-info {
+    display: block;
+    color: #ff9800;
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+/* Actions Section */
+.candidate-actions,
+.official-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hire-btn,
+.train-btn,
+.fire-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+}
+
+.hire-btn {
+    background: linear-gradient(45deg, #4caf50, #45a049);
+    color: white;
+}
+
+.hire-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #45a049, #4caf50);
+    transform: translateY(-2px);
+}
+
+.train-btn {
+    background: linear-gradient(45deg, #2196f3, #1976d2);
+    color: white;
+}
+
+.train-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #1976d2, #2196f3);
+    transform: translateY(-2px);
+}
+
+.fire-btn {
+    background: linear-gradient(45deg, #f44336, #d32f2f);
+    color: white;
+}
+
+.fire-btn:hover {
+    background: linear-gradient(45deg, #d32f2f, #f44336);
+    transform: translateY(-2px);
+}
+
+.company-assignment {
+    padding: 10px 12px;
+    background-color: #1a1a1a;
+    border: 1px solid #335428;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.company-assignment:focus {
+    outline: none;
+    border-color: #4caf50;
+}
+
+.company-assignment:disabled {
+    background-color: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* Responsive Design for RRHH */
+@media (max-width: 700px) {
+    #rrhhPage {
+        padding: 1rem;
+        margin: 1rem;
+    }
+    
+    .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-select {
+        min-width: auto;
+    }
+    
+    .candidates-container,
+    .hired-officials-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .candidate-header,
+    .official-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .candidate-actions,
+    .official-actions {
+        gap: 8px;
+    }
+    
+    .hire-btn,
+    .train-btn,
+    .fire-btn {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+}
