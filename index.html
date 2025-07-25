@@ -43,6 +43,35 @@
             Reset Game
         </button>
     </div>  
+    <!-- Modal para crear compañía -->
+    <div id="createCompanyModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="closeCreateCompanyModal">&times;</span>
+        <div class="modal-preview-header">
+          <img id="modalPreviewIcon" class="companyImage" style="display:none;" src="" alt="Icono">
+          <h2 class="companyName" id="modalPreviewName">Nombre de la compañía</h2>
+        </div>
+        <h2>Crear Compañía</h2>
+        <form id="createCompanyForm">
+          <label for="companyNameInput">Nombre:</label>
+          <input type="text" id="companyNameInput" name="companyNameInput" required>
+          <br>
+          <label for="companyTypeSelect">Tipo:</label>
+          <select id="companyTypeSelect" name="companyTypeSelect" required>
+            <option value="" disabled selected>Selecciona un tipo</option>
+            <option value="Petroleo">Petróleo</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Banco">Banco</option>
+            <option value="Metalurgica">Metalúrgica</option>
+            <option value="Mineria">Minería</option>
+            <option value="Telecomunicaciones">Telecomunicaciones</option>
+          </select>
+          <br>
+          <p id="companyCostDisplay">Costo: -</p>
+          <button type="submit" id="confirmCreateCompanyBtn">Crear</button>
+        </form>
+      </div>
+    </div>
     <div class="main">
         <aside class="sidebar">
             <button id="companiesBtn" class="sidebar-btn active" title="Compañías">

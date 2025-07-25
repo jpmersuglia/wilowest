@@ -29,32 +29,38 @@ const companyTypes = {
     Petroleo: {
         resource: "petroleo",
         icon: "Petroleo.svg",
-        consumes: ["finanzas", "logistica"]
+        consumes: ["finanzas", "logistica"],
+        cost: 60000 // valor aleatorio
     },
     Transporte: {
         resource: "logistica",
         icon: "Transporte.svg",
-        consumes: []
+        consumes: [],
+        cost: 55000 // valor aleatorio
     },
     Banco: {
         resource: "finanzas",
         icon: "Banco.svg",
-        consumes: ["logistica"]
+        consumes: ["logistica"],
+        cost: 70000 // valor aleatorio
     },
     Metalurgica: {
         resource: "hierro",
         icon: "Metalurgica.svg",
-        consumes: []
+        consumes: [],
+        cost: 80000 // valor aleatorio
     },
     Mineria: {
         resource: "carbon",
         icon: "Mineria.svg",
-        consumes: []
+        consumes: [],
+        cost: 90000 // valor aleatorio
     },
     Telecomunicaciones: {
         resource: "logistica",
         icon: "Telecomunicaciones.svg",
-        consumes: []
+        consumes: [],
+        cost: 75000 // valor aleatorio
     }
 };
 
@@ -714,7 +720,85 @@ setInterval(saveGameState, 60000);
 // --- LOAD GAME ON STARTUP ---
 document.addEventListener('DOMContentLoaded', () => {
     const createCompanyButton = document.getElementById('createCompany');
-    createCompanyButton.addEventListener('click', createCompany);
+    const createCompanyModal = document.getElementById('createCompanyModal');
+    const closeCreateCompanyModal = document.getElementById('closeCreateCompanyModal');
+    const createCompanyForm = document.getElementById('createCompanyForm');
+    const companyNameInput = document.getElementById('companyNameInput');
+    const companyTypeSelect = document.getElementById('companyTypeSelect');
+    const companyCostDisplay = document.getElementById('companyCostDisplay');
+    const confirmCreateCompanyBtn = document.getElementById('confirmCreateCompanyBtn');
+    const modalPreviewIcon = document.getElementById('modalPreviewIcon');
+    const modalPreviewName = document.getElementById('modalPreviewName');
+
+    function updateModalPreview() {
+        const name = companyNameInput.value.trim();
+        const type = companyTypeSelect.value;
+        // Actualizar nombre
+        modalPreviewName.textContent = name ? name : 'Nombre de la compañía';
+        // Actualizar icono
+        if (type && companyTypes[type]) {
+            modalPreviewIcon.src = `media/${companyTypes[type].icon}`;
+            modalPreviewIcon.style.display = 'block';
+        } else {
+            modalPreviewIcon.style.display = 'none';
+        }
+    }
+    companyNameInput.addEventListener('input', updateModalPreview);
+    companyTypeSelect.addEventListener('change', updateModalPreview);
+    // Al abrir el modal, resetear la previsualización
+    createCompanyButton.addEventListener('click', () => {
+        createCompanyModal.style.display = 'block';
+        companyNameInput.value = '';
+        companyTypeSelect.value = '';
+        companyCostDisplay.textContent = 'Costo: -';
+        confirmCreateCompanyBtn.disabled = true;
+        updateModalPreview();
+    });
+
+    // Cerrar modal
+    closeCreateCompanyModal.addEventListener('click', () => {
+        createCompanyModal.style.display = 'none';
+    });
+    window.addEventListener('click', (event) => {
+        if (event.target === createCompanyModal) {
+            createCompanyModal.style.display = 'none';
+        }
+    });
+
+    // Actualizar costo al seleccionar tipo
+    companyTypeSelect.addEventListener('change', () => {
+        const type = companyTypeSelect.value;
+        if (type && companyTypes[type]) {
+            companyCostDisplay.textContent = `Costo: $${companyTypes[type].cost.toLocaleString()}`;
+        } else {
+            companyCostDisplay.textContent = 'Costo: -';
+        }
+        validateCreateCompanyForm();
+    });
+    companyNameInput.addEventListener('input', validateCreateCompanyForm);
+
+    function validateCreateCompanyForm() {
+        const name = companyNameInput.value.trim();
+        const type = companyTypeSelect.value;
+        confirmCreateCompanyBtn.disabled = !(name && type);
+    }
+
+    // Crear compañía desde el modal
+    createCompanyForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = companyNameInput.value.trim();
+        const type = companyTypeSelect.value;
+        if (!name || !type || !companyTypes[type]) return;
+        const cost = companyTypes[type].cost;
+        if (mainCompanyMoney < cost) {
+            alert('No tienes suficiente dinero para crear esta compañía.');
+            return;
+        }
+        mainCompanyMoney -= cost;
+        createCompanyWithNameAndType(name, type);
+        createCompanyModal.style.display = 'none';
+        updateMainDisplay();
+    });
 
     // Load game state if available
     if (!loadGameState()) {
@@ -876,4 +960,43 @@ function getInvestigationDataById(id) {
     }
     
     return null;
+}
+
+// Nueva función para crear compañía con nombre y tipo específicos
+function createCompanyWithNameAndType(name, type) {
+    if (!name || !type || !companyTypes[type]) return;
+    const box = document.createElement('div');
+    box.className = 'counter-box';
+    box.setAttribute('data-tier', '0');
+    box.innerHTML = `
+        <div class="company-info">
+            <div class="companyHead" data-tier="0">
+                <div class="companyHead-left">
+                    <img src="media/${companyTypes[type].icon}" class="companyImage">
+                    <h2 class="companyName">${name}</h2>
+                </div>
+                <span class="tier-badge" data-tier="0">Nivel 0</span>
+            </div>
+            <p class="mainCounter">$ 0.00</p>
+        </div>
+        <div class="company-actions">
+            <button class="work">Trabajar</button>
+            <button class="upgrade">Mejorar</button>
+            <button class="merge" style="display: none;">Merge</button>
+            <button class="sell">Vender</button>
+        </div>
+        <div class="company-details">
+            <p>Company Value: <span class="valueCounter">0.00</span></p>
+            <div class="dividendControl">
+                Dividendos: <input type="range" min="0" max="100" value="0" class="dividendSlider">
+                <span class="dividendPercentage">0%</span>
+            </div>
+        </div>
+    `;
+    document.getElementById('app').appendChild(box);
+    companies.push(new Company(box, name, type));
+    totalCompaniesCreated++;
+    updateMainDisplay();
+    updateStatistics();
+    updateResourceDisplay();
 }
