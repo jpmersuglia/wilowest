@@ -1,0 +1,1002 @@
+// Datos base
+let mainCompanyMoney = 500000;
+let totalCompaniesCreated = 0;
+let totalMoneyEarned = mainCompanyMoney;
+let researchPoints = 0; // New variable for research points
+
+// Resource tracking
+let companyResources = {
+    petroleo: 0,
+    logistica: 0,
+    finanzas: 0,
+    hierro: 0,
+    carbon: 0
+};
+
+// RRHH variables
+let hiredOfficials = [];
+
+// Resource prices (base price per unit)
+const resourcePrices = {
+    petroleo: 10.50,
+    logistica: 10.50,
+    finanzas: 10.50,
+    hierro: 10.50,
+    carbon: 10.50
+};
+
+const companyTypes = {
+    Petroleo: {
+        resource: "petroleo",
+        icon: "Petroleo.svg",
+        consumes: ["finanzas", "logistica"],
+        cost: 60000 // valor aleatorio
+    },
+    Transporte: {
+        resource: "logistica",
+        icon: "Transporte.svg",
+        consumes: [],
+        cost: 55000 // valor aleatorio
+    },
+    Banco: {
+        resource: "finanzas",
+        icon: "Banco.svg",
+        consumes: ["logistica"],
+        cost: 70000 // valor aleatorio
+    },
+    Metalurgica: {
+        resource: "hierro",
+        icon: "Metalurgica.svg",
+        consumes: [],
+        cost: 80000 // valor aleatorio
+    },
+    Mineria: {
+        resource: "carbon",
+        icon: "Mineria.svg",
+        consumes: [],
+        cost: 90000 // valor aleatorio
+    },
+    Telecomunicaciones: {
+        resource: "logistica",
+        icon: "Telecomunicaciones.svg",
+        consumes: [],
+        cost: 75000 // valor aleatorio
+    }
+};
+
+const companyNames = [
+    "Starforge", "Moonveil", "Shadowspire", "Ironcrest", "Duskborn", "Brighthelm", "Frostbane", "Voidglass",
+    "Stormhall", "Emberfall", "Bell & Sons", "Harper Brothers", "Smith & Co.", "Carter & Carter",
+    "Hawthorne & Sons", "Bennett Brothers", "Morgan & Blake", "Fletcher & Co.", "Thornhill & Partners",
+    "Parker & Ward", "Mason & Reed", "Hunter & Gray", "Ashford Collective", "Knox & Taylor", "Vance & Co.",
+    "Sterling & Blake", "Hayes Group", "Dalton & Finch", "Rowan Partners", "Carter & Lane", "Hale & Mercer",
+    "Sage & Wilder", "Ellis & Vaughn", "Drake & Solis", "Beacon & Ash", "Orion & Co.", "Weston & Fox",
+    "Luxe & Haven", "Briar & Knox", "Arrow & Finch", "Stonevale", "Horizon Forge", "Driftwood Collective",
+    "Summitworks", "Brightfall Industries", "Ironhaven", "Lunaris Ventures", "Stellar Co.", "Vanguard Studio",
+    "Emberline"
+];
+let companies = []; // Arreglo para almacenar instancias de compañías
+
+// Clase para manejar cada compañía
+class Company {
+    constructor(boxElement, name, type, tier = 0) {
+        this.box = boxElement;
+        this.name = name;
+        this.type = type;
+        this.tier = tier;
+        this.value = 0;
+        this.counter = 0;
+        this.dividendRate = 0;
+        this.resource = companyTypes[type].resource;
+        this.consumes = companyTypes[type].consumes;
+        this.mainCounter = this.box.querySelector('.mainCounter');
+        this.valueCounter = this.box.querySelector('.valueCounter');
+        this.workButton = this.box.querySelector('.work');
+        this.upgradeButton = this.box.querySelector('.upgrade');
+        this.mergeButton = this.box.querySelector('.merge');
+        this.sellButton = this.box.querySelector('.sell');
+        this.dividendSlider = this.box.querySelector('.dividendSlider');
+        this.dividendPercentage = this.box.querySelector('.dividendPercentage');
+
+        this.upgrade = {
+            currentLevel: 0,
+            levels: {
+                0: { cost: 100, increment: 0, resource: 0, investigation: 0 },
+                1: { cost: 500, increment: 15, resource: 1, investigation: 1 },
+                2: { cost: 1000, increment: 20, resource: 2, investigation: 1.5 },
+                3: { cost: 10000, increment: 30, resource: 3, investigation: 2 },
+                4: { cost: 20000, increment: 40, resource: 4, investigation: 2.5 },
+                5: { cost: 25000, increment: 50, resource: 5, investigation: 3 },
+                6: { cost: 50000, increment: 55, resource: 6, investigation: 5.5 },
+                7: { cost: 100000, increment: 60, resource: 7, investigation: 6 },
+                8: { cost: 255000, increment: 75, resource: 8, investigation: 8 },
+                9: { cost: 500000, increment: 85, resource: 9, investigation: 10 },
+                10: { cost: 1000000, increment: 100, resource: 10, investigation: 11 },
+            },
+            getNextCost: function() {
+                return this.levels[this.currentLevel]?.cost || 100;
+            },
+            getIncrement: function() {
+                return this.levels[this.currentLevel]?.increment || 0;
+            },
+            getResourceGeneration: function() {
+                return this.levels[this.currentLevel]?.resource || 0;
+            },
+            getInvestigationChance: function() {
+                return this.levels[this.currentLevel]?.investigation || 0;
+            }
+        };
+        this.intervalId = null;
+        this.bindEvents();
+        this.applyUpgrade();
+        this.updateDividendDisplay();
+        this.updateButtons();
+        updateResourceDisplay();
+    }
+
+    getTierIncrement() {
+        switch(this.tier) {
+            case 0:
+                return this.upgrade.getIncrement();
+            case 1:
+                return 125;
+            case 2:
+                return 175;
+            case 3:
+                return 220;
+            default:
+                return 0;
+        }
+    }
+
+    getInvestigationChance() {
+        switch(this.tier) {
+            case 0:
+                return this.upgrade.getInvestigationChance();
+            case 1:
+                return 15;
+            case 2:
+                return 25;
+            case 3:
+                return 50;
+            default:
+                return 0;
+        }
+    }
+
+    calculateResourceIncome() {
+        let totalIncome = 0;
+        this.consumes.forEach(resource => {
+            const available = companyResources[resource];
+            if (available > 0) {
+                totalIncome += available * resourcePrices[resource];
+            }
+        });
+        return totalIncome;
+    }
+
+    calculateOfficialBonus() {
+        let totalBonus = 0;
+        
+        // Get officials assigned to this company
+        const companyOfficials = hiredOfficials.filter(official => 
+            official.workingIn === this.name && 
+            (!official.trainingUntil || new Date() >= new Date(official.trainingUntil))
+        );
+        
+        // Calculate bonus from each official (0.01% per stat point)
+        companyOfficials.forEach(official => {
+            totalBonus += official.totalStats * 0.01;
+        });
+        
+        return totalBonus;
+    }
+
+    bindEvents() {
+        this.workButton.addEventListener('click', () => this.incrementCounter());
+        this.upgradeButton.addEventListener('click', () => this.handleUpgrade());
+        this.mergeButton.addEventListener('click', () => this.handleMerge());
+        this.sellButton.addEventListener('click', () => this.confirmSell());
+        this.dividendSlider.addEventListener('input', () => this.handleDividendChange());
+    }
+
+    updateButtons() {
+        // Actualizar botón de mejora
+        if (this.tier > 0 || this.upgrade.currentLevel >= 10) {
+            this.upgradeButton.style.display = 'none';
+        } else {
+            this.upgradeButton.style.display = 'block';
+            const nextCost = this.upgrade.getNextCost();
+            if (this.counter >= nextCost && this.upgrade.currentLevel < 10) {
+                this.upgradeButton.innerHTML = 'Mejorar <img src="media/arrow-circle-up.svg" alt="Upgrade" class="upgrade-icon">';
+                this.upgradeButton.disabled = false;
+            } else {
+                this.upgradeButton.innerHTML = 'Mejorar';
+                this.upgradeButton.disabled = this.counter < nextCost;
+            }
+        }
+    
+        // Actualizar botón de merge
+        if (this.tier >= 3) {
+            this.mergeButton.style.display = 'none';
+        } else if ((this.tier === 0 && this.upgrade.currentLevel >= 10) || this.tier > 0) {
+            this.mergeButton.style.display = 'block';
+            if (this.canMerge()) {
+                this.mergeButton.disabled = false;
+                this.mergeButton.classList.add('merge-button');
+            } else {
+                this.mergeButton.disabled = true;
+                this.mergeButton.classList.remove('merge-button');
+            }
+        } else {
+            this.mergeButton.style.display = 'none';
+        }
+    }
+
+    canMerge() {
+        if (this.tier >= 3) return false; // Can't merge if already max tier
+        
+        // For Tier 0, require all companies to be level 10
+        if (this.tier === 0 && this.upgrade.currentLevel < 10) return false;
+        
+        const sameTypeCompanies = companies.filter(c => 
+            c.type === this.type && 
+            c.tier === this.tier && 
+            c !== this &&
+            (this.tier > 0 || c.upgrade.currentLevel >= 10) // Require level 10 only for Tier 0
+        );
+        
+        return sameTypeCompanies.length >= 2; // Need 2 other companies of same type and tier
+    }
+
+    incrementCounter() {
+        const dividend = this.dividendRate / 100;
+        const baseEarnings = 1;
+        const resourceIncome = this.calculateResourceIncome();
+        
+        // Calculate investigation bonus
+        const investigationBonus = getInvestigationBonus(this.type);
+        const baseIncrement = this.getTierIncrement();
+        const bonusAmount = (baseIncrement * investigationBonus) / 100;
+        
+        // Calculate official bonus
+        const officialBonus = this.calculateOfficialBonus();
+        const officialBonusAmount = (baseIncrement * officialBonus) / 100;
+        
+        console.log(`=== ${this.name} (${this.type}) EARNINGS CALCULATION ===`);
+        console.log(`Base increment: ${baseIncrement}`);
+        console.log(`Investigation bonus: ${investigationBonus}%`);
+        console.log(`Bonus amount: ${bonusAmount.toFixed(2)}`);
+        console.log(`Official bonus: ${officialBonus}%`);
+        console.log(`Official bonus amount: ${officialBonusAmount.toFixed(2)}`);
+        console.log(`Resource income: ${resourceIncome.toFixed(2)}`);
+        
+        const totalEarnings = baseEarnings + resourceIncome + bonusAmount + officialBonusAmount;
+        const companyEarnings = totalEarnings * (1 - dividend);
+        const mainCompanyDividend = totalEarnings * dividend;
+
+        console.log(`Total earnings: ${totalEarnings.toFixed(2)}`);
+        console.log(`Company earnings: ${companyEarnings.toFixed(2)}`);
+        console.log(`Main company dividend: ${mainCompanyDividend.toFixed(2)}`);
+
+        this.counter += companyEarnings;
+        this.value += companyEarnings;
+        mainCompanyMoney += mainCompanyDividend;
+        totalMoneyEarned += mainCompanyDividend;
+
+        // Check for research points generation
+        const investigationChance = this.getInvestigationChance();
+        if (Math.random() * 100 < investigationChance) {
+            researchPoints++;
+        }
+
+        this.updateDisplay();
+        this.updateButtons();
+        updateMainDisplay();
+        updateStatistics();
+        updateResourceDisplay();
+    }
+
+    handleUpgrade() {
+        if (this.tier > 0) return; // No upgrades for non-Tier 0 companies
+
+        const nextCost = this.upgrade.getNextCost();
+        if (this.counter >= nextCost && this.upgrade.currentLevel < 10) {
+            this.counter -= nextCost;
+            this.upgrade.currentLevel++;
+            
+            // Clear existing interval before applying new upgrade
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+            
+            this.applyUpgrade();
+            this.updateDisplay();
+            this.updateButtons();
+        }
+    }
+
+    handleMerge() {
+        if (this.tier >= 3) return; // No merges for Tier 3 companies
+        if (this.canMerge()) {
+            this.merge();
+        }
+    }
+
+    merge() {
+        // For Tier 0, require all companies to be level 10
+        if (this.tier === 0 && this.upgrade.currentLevel < 10) return;
+        
+        const sameTypeCompanies = companies.filter(c => 
+            c.type === this.type && 
+            c.tier === this.tier && 
+            c !== this &&
+            (this.tier > 0 || c.upgrade.currentLevel >= 10) // Require level 10 only for Tier 0
+        );
+
+        if (sameTypeCompanies.length < 2) return;
+
+        // Get the first two companies for merging
+        const [company1, company2] = sameTypeCompanies.slice(0, 2);
+
+        // Sum up the counters and values
+        const totalCounter = this.counter + company1.counter + company2.counter;
+        const totalValue = this.value + company1.value + company2.value;
+
+        // Remove the merged companies
+        company1.box.remove();
+        company2.box.remove();
+        companies = companies.filter(c => c !== company1 && c !== company2);
+
+        // Update this company to the next tier
+        this.tier++;
+        this.counter = totalCounter;
+        this.value = totalValue;
+        this.upgrade.currentLevel = 0;
+
+        // Update tier badge in the interface
+        const tierBadge = this.box.querySelector('.tier-badge');
+        if (tierBadge) {
+            tierBadge.textContent = `Tier ${this.tier}`;
+            tierBadge.setAttribute('data-tier', this.tier);
+        }
+
+        // Update box border and company head background
+        this.box.setAttribute('data-tier', this.tier);
+        const companyHead = this.box.querySelector('.companyHead');
+        if (companyHead) {
+            companyHead.setAttribute('data-tier', this.tier);
+        }
+
+        // Reapply upgrade to get the new tier increment
+        this.applyUpgrade();
+
+        // Update display
+        this.updateDisplay();
+        this.updateButtons();
+        updateMainDisplay();
+        updateStatistics();
+        updateResourceDisplay();
+    }
+
+    applyUpgrade() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+
+        // Determinar el incremento basado en el tier
+        let increment = 0;
+        if (this.tier === 0) {
+            increment = this.upgrade.getIncrement();
+        } else if (this.tier === 1) {
+            increment = 125;
+        } else if (this.tier === 2) {
+            increment = 175;
+        } else if (this.tier === 3) {
+            increment = 220;
+        }
+
+        console.log(`Company ${this.name} (Tier ${this.tier}) increment set to: ${increment}`); // Debug log
+
+        if (increment > 0) {
+            this.intervalId = setInterval(() => {
+                const dividend = this.dividendRate / 100;
+                const resourceIncome = this.calculateResourceIncome();
+                
+                // Calculate investigation bonus
+                const investigationBonus = getInvestigationBonus(this.type);
+                const bonusAmount = (increment * investigationBonus) / 100;
+                
+                // Calculate official bonus
+                const officialBonus = this.calculateOfficialBonus();
+                const officialBonusAmount = (increment * officialBonus) / 100;
+                
+                const totalEarnings = increment + resourceIncome + bonusAmount + officialBonusAmount;
+                const companyEarnings = totalEarnings * (1 - dividend);
+                const mainCompanyDividend = totalEarnings * dividend;
+
+                this.value += companyEarnings;
+                this.counter += companyEarnings;
+                mainCompanyMoney += mainCompanyDividend;
+                totalMoneyEarned += mainCompanyDividend;
+
+                // Check for research points generation
+                const investigationChance = this.getInvestigationChance();
+                if (Math.random() * 100 < investigationChance) {
+                    researchPoints++;
+                }
+
+                this.updateDisplay();
+                this.updateButtons();
+                updateMainDisplay();
+                updateStatistics();
+                updateResourceDisplay();
+            }, 1000);
+        }
+    }
+
+    handleDividendChange() {
+        this.dividendRate = parseInt(this.dividendSlider.value);
+        this.updateDividendDisplay();
+    }
+
+    updateDividendDisplay() {
+        this.dividendPercentage.textContent = `${this.dividendRate}%`;
+    }
+
+    confirmSell() {
+        if (confirm(`¿Estás seguro que deseas vender ${this.name} por $${this.value.toFixed(2)}?`)) {
+            this.sellCompany();
+        }
+    }
+
+    sellCompany() {
+        mainCompanyMoney += this.value;
+        totalMoneyEarned += this.value;
+        this.box.remove();
+        companies = companies.filter(c => c !== this);
+        updateMainDisplay();
+        updateStatistics();
+    }
+
+    updateDisplay() {
+        this.mainCounter.textContent = `$ ${this.counter.toFixed(2)}`;
+        this.valueCounter.textContent = `$ ${this.value.toFixed(2)}`;
+        
+        // Update tier badge display
+        const tierBadge = this.box.querySelector('.tier-badge');
+        if (tierBadge) {
+            if (this.tier === 0) {
+                tierBadge.textContent = `Nivel ${this.upgrade.currentLevel}`;
+            } else {
+                tierBadge.textContent = `Tier ${this.tier}`;
+            }
+            tierBadge.setAttribute('data-tier', this.tier);
+        }
+    }
+}
+
+function updateResourceDisplay() {
+    const resourceContainer = document.getElementById('resourceDisplay');
+    if (!resourceContainer) return;
+
+    // Reset all resources to 0
+    for (const resource in companyResources) {
+        companyResources[resource] = 0;
+    }
+
+    // Calculate total resources based on company levels
+    companies.forEach(company => {
+        const resourceGeneration = company.upgrade.getResourceGeneration();
+        companyResources[company.resource] += resourceGeneration;
+    });
+
+    // Update display
+    resourceContainer.innerHTML = '';
+    for (const [resource, amount] of Object.entries(companyResources)) {
+        if (amount > 0) {
+            const resourceElement = document.createElement('p');
+            resourceElement.textContent = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${amount}`;
+            resourceContainer.appendChild(resourceElement);
+        }
+    }
+}
+
+// Crear una nueva compañía
+function createCompany() {
+    if (mainCompanyMoney < 50000 || companies.length >= 5) return;
+
+    mainCompanyMoney -= 50000;
+    const name = companyNames[Math.floor(Math.random() * companyNames.length)];
+    const type = Object.keys(companyTypes)[Math.floor(Math.random() * Object.keys(companyTypes).length)];
+
+    const box = document.createElement('div');
+    box.className = 'counter-box';
+    box.setAttribute('data-tier', '0');
+    box.innerHTML = `
+        <div class="company-info">
+            <div class="companyHead" data-tier="0">
+                <div class="companyHead-left">
+                    <img src="media/${companyTypes[type].icon}" class="companyImage">
+                    <h2 class="companyName">${name}</h2>
+                </div>
+                <span class="tier-badge" data-tier="0">Nivel 0</span>
+            </div>
+            <p class="mainCounter">$ 0.00</p>
+        </div>
+        <div class="company-actions">
+            <button class="work">Trabajar</button>
+            <button class="upgrade">Mejorar</button>
+            <button class="merge" style="display: none;">Merge</button>
+            <button class="sell">Vender</button>
+        </div>
+        <div class="company-details">
+            <p>Company Value: <span class="valueCounter">0.00</span></p>
+            <div class="dividendControl">
+                Dividendos: <input type="range" min="0" max="100" value="0" class="dividendSlider">
+                <span class="dividendPercentage">0%</span>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('app').appendChild(box);
+    companies.push(new Company(box, name, type));
+    totalCompaniesCreated++;
+    updateMainDisplay();
+    updateStatistics();
+    updateResourceDisplay();
+}
+
+function updateStatistics() {
+    document.getElementById('totalCompanies').textContent = `Compañías creadas: ${totalCompaniesCreated}`;
+    document.getElementById('totalMoneyEarned').textContent = `Dinero total ganado: $${totalMoneyEarned.toFixed(2)}`; // Mostrar con decimales
+}
+
+// Actualizar el contador principal
+function updateMainDisplay() {
+    document.getElementById('mainCompanyMoney').innerHTML = `<img src="media/usd-circle.svg" alt="Money" class="resource-icon"> ${mainCompanyMoney.toFixed(2)} <img src="media/sparkles.svg" alt="Research" class="resource-icon"> ${researchPoints}`;
+    document.getElementById('createCompany').disabled = mainCompanyMoney < 50000 || companies.length >= 5;
+}
+
+// --- RESTART GAME FUNCTIONALITY ---
+function resetGameState() {
+    // Reset all main variables
+    mainCompanyMoney = 500000;
+    totalCompaniesCreated = 0;
+    totalMoneyEarned = mainCompanyMoney;
+    researchPoints = 0;
+    for (const key in companyResources) companyResources[key] = 0;
+    
+    // Reset RRHH data
+    hiredOfficials = [];
+    
+    companies.forEach(company => {
+        if (company.intervalId) clearInterval(company.intervalId);
+    });
+    companies = [];
+    // Remove all company boxes
+    const app = document.getElementById('app');
+    while (app.firstChild) app.removeChild(app.firstChild);
+    
+    // Clear investigation data when resetting
+    const gameState = {
+        mainCompanyMoney,
+        totalCompaniesCreated,
+        totalMoneyEarned,
+        researchPoints,
+        companyResources,
+        companies: [],
+        purchasedInvestigations: [], // Clear investigation data on reset
+        candidates: [], // Clear RRHH data on reset
+        hiredOfficials: [] // Clear RRHH data on reset
+    };
+    localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
+    
+    // Reset UI
+    updateMainDisplay();
+    updateStatistics();
+    updateResourceDisplay();
+    // Create initial company
+    createCompany();
+}
+
+// --- SAVE GAME STATE TO LOCALSTORAGE ---
+function saveGameState() {
+    // First, get the existing game state to preserve investigation data
+    const existingState = localStorage.getItem('wilowest_game_state');
+    let existingGameState = {};
+    
+    if (existingState) {
+        try {
+            existingGameState = JSON.parse(existingState);
+        } catch (e) {
+            console.error('Error parsing existing game state:', e);
+        }
+    }
+    
+    const gameState = {
+        mainCompanyMoney,
+        totalCompaniesCreated,
+        totalMoneyEarned,
+        researchPoints,
+        companyResources,
+        companies: companies.map(company => ({
+            name: company.name,
+            type: company.type,
+            tier: company.tier,
+            value: company.value,
+            counter: company.counter,
+            dividendRate: company.dividendRate,
+            upgradeLevel: company.upgrade.currentLevel
+        })),
+        // Preserve investigation data from existing state
+        purchasedInvestigations: existingGameState.purchasedInvestigations || [],
+        // Preserve RRHH data from existing state
+        candidates: existingGameState.candidates || [],
+        hiredOfficials: existingGameState.hiredOfficials || []
+    };
+    localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
+}
+
+function loadGameState() {
+    const saved = localStorage.getItem('wilowest_game_state');
+    if (!saved) return false;
+    try {
+        const gameState = JSON.parse(saved);
+        mainCompanyMoney = gameState.mainCompanyMoney;
+        totalCompaniesCreated = gameState.totalCompaniesCreated;
+        totalMoneyEarned = gameState.totalMoneyEarned;
+        researchPoints = gameState.researchPoints;
+        for (const key in companyResources) companyResources[key] = gameState.companyResources[key] || 0;
+        
+        // Load RRHH data
+        hiredOfficials = gameState.hiredOfficials || [];
+        
+        // Remove all company boxes and clear intervals
+        companies.forEach(company => {
+            if (company.intervalId) clearInterval(company.intervalId);
+        });
+        companies = [];
+        const app = document.getElementById('app');
+        while (app.firstChild) app.removeChild(app.firstChild);
+        // Restore companies
+        gameState.companies.forEach(data => {
+            const box = document.createElement('div');
+            box.className = 'counter-box';
+            box.setAttribute('data-tier', data.tier);
+            box.innerHTML = `
+                <div class="company-info">
+                    <div class="companyHead" data-tier="${data.tier}">
+                        <div class="companyHead-left">
+                            <img src="media/${companyTypes[data.type].icon}" class="companyImage">
+                            <h2 class="companyName">${data.name}</h2>
+                        </div>
+                        <span class="tier-badge" data-tier="${data.tier}">${data.tier === 0 ? `Nivel ${data.upgradeLevel}` : `Tier ${data.tier}`}</span>
+                    </div>
+                    <p class="mainCounter">$ 0.00</p>
+                </div>
+                <div class="company-actions">
+                    <button class="work">Trabajar</button>
+                    <button class="upgrade">Mejorar</button>
+                    <button class="merge" style="display: none;">Merge</button>
+                    <button class="sell">Vender</button>
+                </div>
+                <div class="company-details">
+                    <p>Company Value: <span class="valueCounter">0.00</span></p>
+                    <div class="dividendControl">
+                        Dividendos: <input type="range" min="0" max="100" value="0" class="dividendSlider">
+                        <span class="dividendPercentage">0%</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('app').appendChild(box);
+            const company = new Company(box, data.name, data.type, data.tier);
+            company.value = data.value;
+            company.counter = data.counter;
+            company.dividendRate = data.dividendRate;
+            company.upgrade.currentLevel = data.upgradeLevel;
+            company.updateDisplay();
+            company.updateButtons();
+            company.dividendSlider.value = data.dividendRate;
+            company.updateDividendDisplay();
+            company.applyUpgrade();
+            companies.push(company);
+        });
+        updateMainDisplay();
+        updateStatistics();
+        updateResourceDisplay();
+        return true;
+    } catch (e) {
+        console.error('Error loading game state:', e);
+        return false;
+    }
+}
+
+// --- AUTO-SAVE EVERY 1 MINUTE ---
+setInterval(saveGameState, 60000);
+
+// --- LOAD GAME ON STARTUP ---
+document.addEventListener('DOMContentLoaded', () => {
+    const createCompanyButton = document.getElementById('createCompany');
+    const createCompanyModal = document.getElementById('createCompanyModal');
+    const closeCreateCompanyModal = document.getElementById('closeCreateCompanyModal');
+    const createCompanyForm = document.getElementById('createCompanyForm');
+    const companyNameInput = document.getElementById('companyNameInput');
+    const companyTypeSelect = document.getElementById('companyTypeSelect');
+    const companyCostDisplay = document.getElementById('companyCostDisplay');
+    const confirmCreateCompanyBtn = document.getElementById('confirmCreateCompanyBtn');
+    const modalPreviewIcon = document.getElementById('modalPreviewIcon');
+    const modalPreviewName = document.getElementById('modalPreviewName');
+
+    function updateModalPreview() {
+        const name = companyNameInput.value.trim();
+        const type = companyTypeSelect.value;
+        // Actualizar nombre
+        modalPreviewName.textContent = name ? name : 'Nombre de la compañía';
+        // Actualizar icono
+        if (type && companyTypes[type]) {
+            modalPreviewIcon.src = `media/${companyTypes[type].icon}`;
+            modalPreviewIcon.style.display = 'block';
+        } else {
+            modalPreviewIcon.style.display = 'none';
+        }
+    }
+    companyNameInput.addEventListener('input', updateModalPreview);
+    companyTypeSelect.addEventListener('change', updateModalPreview);
+    // Al abrir el modal, resetear la previsualización
+    createCompanyButton.addEventListener('click', () => {
+        createCompanyModal.style.display = 'block';
+        companyNameInput.value = '';
+        companyTypeSelect.value = '';
+        companyCostDisplay.textContent = 'Costo: -';
+        confirmCreateCompanyBtn.disabled = true;
+        updateModalPreview();
+    });
+
+    // Cerrar modal
+    closeCreateCompanyModal.addEventListener('click', () => {
+        createCompanyModal.style.display = 'none';
+    });
+    window.addEventListener('click', (event) => {
+        if (event.target === createCompanyModal) {
+            createCompanyModal.style.display = 'none';
+        }
+    });
+
+    // Actualizar costo al seleccionar tipo
+    companyTypeSelect.addEventListener('change', () => {
+        const type = companyTypeSelect.value;
+        if (type && companyTypes[type]) {
+            companyCostDisplay.textContent = `Costo: $${companyTypes[type].cost.toLocaleString()}`;
+        } else {
+            companyCostDisplay.textContent = 'Costo: -';
+        }
+        validateCreateCompanyForm();
+    });
+    companyNameInput.addEventListener('input', validateCreateCompanyForm);
+
+    function validateCreateCompanyForm() {
+        const name = companyNameInput.value.trim();
+        const type = companyTypeSelect.value;
+        confirmCreateCompanyBtn.disabled = !(name && type);
+    }
+
+    // Crear compañía desde el modal
+    createCompanyForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = companyNameInput.value.trim();
+        const type = companyTypeSelect.value;
+        if (!name || !type || !companyTypes[type]) return;
+        const cost = companyTypes[type].cost;
+        if (mainCompanyMoney < cost) {
+            alert('No tienes suficiente dinero para crear esta compañía.');
+            return;
+        }
+        mainCompanyMoney -= cost;
+        createCompanyWithNameAndType(name, type);
+        createCompanyModal.style.display = 'none';
+        updateMainDisplay();
+    });
+
+    // Load game state if available
+    if (!loadGameState()) {
+        // Create initial company only if there are no companies
+        if (companies.length === 0) {
+            createCompany();
+        }
+    }
+
+    updateMainDisplay();
+    updateStatistics();
+
+    // Menu toggle functionality
+    const menuToggle = document.querySelector('.menu-toggle');
+    const menu = document.querySelector('.menu');
+    
+    menuToggle.addEventListener('click', () => {
+        menu.classList.toggle('active');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !menuToggle.contains(e.target)) {
+            menu.classList.remove('active');
+        }
+    });
+
+    // Add restart button event
+    const restartBtn = document.getElementById('restartGame');
+    if (restartBtn) {
+        restartBtn.addEventListener('click', () => {
+            if (confirm('¿Estás seguro que deseas reiniciar el juego? ¡Perderás todo tu progreso!')) {
+                resetGameState();
+            }
+        });
+    }
+
+    // Add save button event
+    const saveBtn = document.getElementById('saveGame');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            saveGameState();
+            // Show a brief confirmation message
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Guardado';
+            saveBtn.style.background = '#4caf50';
+            setTimeout(() => {
+                saveBtn.innerHTML = originalText;
+                saveBtn.style.background = '#2196f3';
+            }, 2000);
+        });
+    }
+
+    // Navigation buttons
+    const investigationTreeBtn = document.getElementById('investigationTreeBtn');
+    if (investigationTreeBtn) {
+        investigationTreeBtn.addEventListener('click', () => {
+            // Save game state before navigating
+            saveGameState();
+            window.location.href = 'investigationtree.html';
+        });
+    }
+
+    // RRHH navigation button
+    const rrhhBtn = document.getElementById('rrhhBtn');
+    if (rrhhBtn) {
+        rrhhBtn.addEventListener('click', () => {
+            // Save game state before navigating
+            saveGameState();
+            window.location.href = 'rrhh.html';
+        });
+    }
+});
+
+// --- INVESTIGATION BONUS CALCULATION ---
+function getInvestigationBonus(companyType) {
+    let totalBonus = 0;
+    
+    // Get the current game state to check purchased investigations
+    const saved = localStorage.getItem('wilowest_game_state');
+    if (saved) {
+        try {
+            const gameState = JSON.parse(saved);
+            const purchasedInvestigations = gameState.purchasedInvestigations || [];
+            
+            // Map company types to their investigation IDs
+            const companyTypeMap = {
+                'Petroleo': '1',
+                'Transporte': '2', 
+                'Banco': '3',
+                'Metalurgica': '4',
+                'Mineria': '5',
+                'Telecomunicaciones': '6'
+            };
+            
+            const companyNumber = companyTypeMap[companyType];
+            if (companyNumber) {
+                // Find all purchased investigations for this company type
+                purchasedInvestigations.forEach(id => {
+                    if (id.startsWith(companyNumber + '.')) {
+                        // Get the investigation data to find the effect percentage
+                        const investigationData = getInvestigationDataById(id);
+                        if (investigationData) {
+                            totalBonus += investigationData.effect;
+                            console.log(`Applied ${investigationData.effect}% bonus from ${investigationData.name} (${id})`);
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error calculating investigation bonus:', e);
+        }
+    }
+    
+    return totalBonus;
+}
+
+function getInvestigationDataById(id) {
+    // Investigation tree data structure (same as in investigationtree.js)
+    const investigationTrees = {
+        Petroleo: [
+            { id: "1.1.1", name: "Perforación Avanzada", effect: 5 },
+            { id: "1.1.2", name: "Refinamiento Mejorado", effect: 7 },
+            { id: "1.2.1", name: "Exploración Submarina", effect: 10 }
+        ],
+        Transporte: [
+            { id: "2.1.1", name: "Rutas Optimizadas", effect: 5 },
+            { id: "2.1.2", name: "Flota Modernizada", effect: 8 },
+            { id: "2.2.1", name: "Logística Inteligente", effect: 12 }
+        ],
+        Banco: [
+            { id: "3.1.1", name: "Algoritmos de Riesgo", effect: 5 },
+            { id: "3.1.2", name: "Banca Digital", effect: 7 },
+            { id: "3.2.1", name: "Inversiones Globales", effect: 15 }
+        ],
+        Metalurgica: [
+            { id: "4.1.1", name: "Fundición Eficiente", effect: 5 },
+            { id: "4.1.2", name: "Aleaciones Avanzadas", effect: 8 },
+            { id: "4.2.1", name: "Automatización Industrial", effect: 13 }
+        ],
+        Mineria: [
+            { id: "5.1.1", name: "Explosivos Mejorados", effect: 5 },
+            { id: "5.1.2", name: "Maquinaria Pesada", effect: 9 },
+            { id: "5.2.1", name: "Exploración Geológica", effect: 16 }
+        ],
+        Telecomunicaciones: [
+            { id: "6.1.1", name: "Fibra Óptica", effect: 5 },
+            { id: "6.1.2", name: "5G Network", effect: 10 },
+            { id: "6.2.1", name: "Satélites de Comunicación", effect: 20 }
+        ]
+    };
+    
+    // Search for the investigation in all company types
+    for (const [companyType, investigations] of Object.entries(investigationTrees)) {
+        const investigation = investigations.find(inv => inv.id === id);
+        if (investigation) {
+            return investigation;
+        }
+    }
+    
+    return null;
+}
+
+// Nueva función para crear compañía con nombre y tipo específicos
+function createCompanyWithNameAndType(name, type) {
+    if (!name || !type || !companyTypes[type]) return;
+    const box = document.createElement('div');
+    box.className = 'counter-box';
+    box.setAttribute('data-tier', '0');
+    box.innerHTML = `
+        <div class="company-info">
+            <div class="companyHead" data-tier="0">
+                <div class="companyHead-left">
+                    <img src="media/${companyTypes[type].icon}" class="companyImage">
+                    <h2 class="companyName">${name}</h2>
+                </div>
+                <span class="tier-badge" data-tier="0">Nivel 0</span>
+            </div>
+            <p class="mainCounter">$ 0.00</p>
+        </div>
+        <div class="company-actions">
+            <button class="work">Trabajar</button>
+            <button class="upgrade">Mejorar</button>
+            <button class="merge" style="display: none;">Merge</button>
+            <button class="sell">Vender</button>
+        </div>
+        <div class="company-details">
+            <p>Company Value: <span class="valueCounter">0.00</span></p>
+            <div class="dividendControl">
+                Dividendos: <input type="range" min="0" max="100" value="0" class="dividendSlider">
+                <span class="dividendPercentage">0%</span>
+            </div>
+        </div>
+    `;
+    document.getElementById('app').appendChild(box);
+    companies.push(new Company(box, name, type));
+    totalCompaniesCreated++;
+    updateMainDisplay();
+    updateStatistics();
+    updateResourceDisplay();
+}
