@@ -101,28 +101,28 @@ class Company {
         this.upgrade = {
             currentLevel: 0,
             levels: {
-                0: { cost: 100, increment: 0, resource: 0, investigation: 0 },
-                1: { cost: 500, increment: 15, resource: 1, investigation: 1 },
-                2: { cost: 1000, increment: 20, resource: 2, investigation: 1.5 },
-                3: { cost: 10000, increment: 30, resource: 3, investigation: 2 },
-                4: { cost: 20000, increment: 40, resource: 4, investigation: 2.5 },
-                5: { cost: 25000, increment: 50, resource: 5, investigation: 3 },
-                6: { cost: 50000, increment: 55, resource: 6, investigation: 5.5 },
-                7: { cost: 100000, increment: 60, resource: 7, investigation: 6 },
-                8: { cost: 255000, increment: 75, resource: 8, investigation: 8 },
-                9: { cost: 500000, increment: 85, resource: 9, investigation: 10 },
-                10: { cost: 1000000, increment: 100, resource: 10, investigation: 11 },
+                0: { cost: 10, increment: 0, resource: 0, investigation: 0 },
+                1: { cost: 50, increment: 15, resource: 1, investigation: 1 },
+                2: { cost: 100, increment: 20, resource: 2, investigation: 1.5 },
+                3: { cost: 1000, increment: 30, resource: 3, investigation: 2 },
+                4: { cost: 2000, increment: 40, resource: 4, investigation: 2.5 },
+                5: { cost: 2000, increment: 50, resource: 5, investigation: 3 },
+                6: { cost: 5000, increment: 60, resource: 6, investigation: 5.5 },
+                7: { cost: 10000, increment: 75, resource: 7, investigation: 6 },
+                8: { cost: 15000, increment: 85, resource: 8, investigation: 8 },
+                9: { cost: 10000, increment: 95, resource: 9, investigation: 10 },
+                10: { cost: 100000, increment: 125, resource: 10, investigation: 12 },
             },
-            getNextCost: function() {
+            getNextCost: function () {
                 return this.levels[this.currentLevel]?.cost || 100;
             },
-            getIncrement: function() {
+            getIncrement: function () {
                 return this.levels[this.currentLevel]?.increment || 0;
             },
-            getResourceGeneration: function() {
+            getResourceGeneration: function () {
                 return this.levels[this.currentLevel]?.resource || 0;
             },
-            getInvestigationChance: function() {
+            getInvestigationChance: function () {
                 return this.levels[this.currentLevel]?.investigation || 0;
             }
         };
@@ -135,7 +135,7 @@ class Company {
     }
 
     getTierIncrement() {
-        switch(this.tier) {
+        switch (this.tier) {
             case 0:
                 return this.upgrade.getIncrement();
             case 1:
@@ -150,7 +150,7 @@ class Company {
     }
 
     getInvestigationChance() {
-        switch(this.tier) {
+        switch (this.tier) {
             case 0:
                 return this.upgrade.getInvestigationChance();
             case 1:
@@ -177,18 +177,18 @@ class Company {
 
     calculateOfficialBonus() {
         let totalBonus = 0;
-        
+
         // Get officials assigned to this company
-        const companyOfficials = hiredOfficials.filter(official => 
-            official.workingIn === this.name && 
+        const companyOfficials = hiredOfficials.filter(official =>
+            official.workingIn === this.name &&
             (!official.trainingUntil || new Date() >= new Date(official.trainingUntil))
         );
-        
+
         // Calculate bonus from each official (0.01% per stat point)
         companyOfficials.forEach(official => {
             totalBonus += official.totalStats * 0.01;
         });
-        
+
         return totalBonus;
     }
 
@@ -215,7 +215,7 @@ class Company {
                 this.upgradeButton.disabled = this.counter < nextCost;
             }
         }
-    
+
         // Actualizar botón de merge
         if (this.tier >= 3) {
             this.mergeButton.style.display = 'none';
@@ -235,17 +235,17 @@ class Company {
 
     canMerge() {
         if (this.tier >= 3) return false; // Can't merge if already max tier
-        
+
         // For Tier 0, require all companies to be level 10
         if (this.tier === 0 && this.upgrade.currentLevel < 10) return false;
-        
-        const sameTypeCompanies = companies.filter(c => 
-            c.type === this.type && 
-            c.tier === this.tier && 
+
+        const sameTypeCompanies = companies.filter(c =>
+            c.type === this.type &&
+            c.tier === this.tier &&
             c !== this &&
             (this.tier > 0 || c.upgrade.currentLevel >= 10) // Require level 10 only for Tier 0
         );
-        
+
         return sameTypeCompanies.length >= 2; // Need 2 other companies of same type and tier
     }
 
@@ -253,16 +253,16 @@ class Company {
         const dividend = this.dividendRate / 100;
         const baseEarnings = 1;
         const resourceIncome = this.calculateResourceIncome();
-        
+
         // Calculate investigation bonus
         const investigationBonus = getInvestigationBonus(this.type);
         const baseIncrement = this.getTierIncrement();
         const bonusAmount = (baseIncrement * investigationBonus) / 100;
-        
+
         // Calculate official bonus
         const officialBonus = this.calculateOfficialBonus();
         const officialBonusAmount = (baseIncrement * officialBonus) / 100;
-        
+
         console.log(`=== ${this.name} (${this.type}) EARNINGS CALCULATION ===`);
         console.log(`Base increment: ${baseIncrement}`);
         console.log(`Investigation bonus: ${investigationBonus}%`);
@@ -270,7 +270,7 @@ class Company {
         console.log(`Official bonus: ${officialBonus}%`);
         console.log(`Official bonus amount: ${officialBonusAmount.toFixed(2)}`);
         console.log(`Resource income: ${resourceIncome.toFixed(2)}`);
-        
+
         const totalEarnings = baseEarnings + resourceIncome + bonusAmount + officialBonusAmount;
         const companyEarnings = totalEarnings * (1 - dividend);
         const mainCompanyDividend = totalEarnings * dividend;
@@ -304,13 +304,13 @@ class Company {
         if (this.counter >= nextCost && this.upgrade.currentLevel < 10) {
             this.counter -= nextCost;
             this.upgrade.currentLevel++;
-            
+
             // Clear existing interval before applying new upgrade
             if (this.intervalId) {
                 clearInterval(this.intervalId);
                 this.intervalId = null;
             }
-            
+
             this.applyUpgrade();
             this.updateDisplay();
             this.updateButtons();
@@ -327,10 +327,10 @@ class Company {
     merge() {
         // For Tier 0, require all companies to be level 10
         if (this.tier === 0 && this.upgrade.currentLevel < 10) return;
-        
-        const sameTypeCompanies = companies.filter(c => 
-            c.type === this.type && 
-            c.tier === this.tier && 
+
+        const sameTypeCompanies = companies.filter(c =>
+            c.type === this.type &&
+            c.tier === this.tier &&
             c !== this &&
             (this.tier > 0 || c.upgrade.currentLevel >= 10) // Require level 10 only for Tier 0
         );
@@ -404,15 +404,15 @@ class Company {
             this.intervalId = setInterval(() => {
                 const dividend = this.dividendRate / 100;
                 const resourceIncome = this.calculateResourceIncome();
-                
+
                 // Calculate investigation bonus
                 const investigationBonus = getInvestigationBonus(this.type);
                 const bonusAmount = (increment * investigationBonus) / 100;
-                
+
                 // Calculate official bonus
                 const officialBonus = this.calculateOfficialBonus();
                 const officialBonusAmount = (increment * officialBonus) / 100;
-                
+
                 const totalEarnings = increment + resourceIncome + bonusAmount + officialBonusAmount;
                 const companyEarnings = totalEarnings * (1 - dividend);
                 const mainCompanyDividend = totalEarnings * dividend;
@@ -464,7 +464,7 @@ class Company {
     updateDisplay() {
         this.mainCounter.textContent = `$ ${this.counter.toFixed(2)}`;
         this.valueCounter.textContent = `$ ${this.value.toFixed(2)}`;
-        
+
         // Update tier badge display
         const tierBadge = this.box.querySelector('.tier-badge');
         if (tierBadge) {
@@ -506,7 +506,7 @@ function updateResourceDisplay() {
 
 // Crear una nueva compañía
 function createCompany() {
-    if (mainCompanyMoney < 50000 || companies.length >= 5) return;
+    if (mainCompanyMoney < 50000 || companies.length >= 15) return;
 
     mainCompanyMoney -= 50000;
     const name = companyNames[Math.floor(Math.random() * companyNames.length)];
@@ -557,7 +557,7 @@ function updateStatistics() {
 // Actualizar el contador principal
 function updateMainDisplay() {
     document.getElementById('mainCompanyMoney').innerHTML = `<img src="media/usd-circle.svg" alt="Money" class="resource-icon"> ${mainCompanyMoney.toFixed(2)} <img src="media/sparkles.svg" alt="Research" class="resource-icon"> ${researchPoints}`;
-    document.getElementById('createCompany').disabled = mainCompanyMoney < 50000 || companies.length >= 5;
+    document.getElementById('createCompany').disabled = mainCompanyMoney < 50000 || companies.length >= 15;
 }
 
 // --- RESTART GAME FUNCTIONALITY ---
@@ -568,10 +568,10 @@ function resetGameState() {
     totalMoneyEarned = mainCompanyMoney;
     researchPoints = 0;
     for (const key in companyResources) companyResources[key] = 0;
-    
+
     // Reset RRHH data
     hiredOfficials = [];
-    
+
     companies.forEach(company => {
         if (company.intervalId) clearInterval(company.intervalId);
     });
@@ -579,7 +579,7 @@ function resetGameState() {
     // Remove all company boxes
     const app = document.getElementById('app');
     while (app.firstChild) app.removeChild(app.firstChild);
-    
+
     // Clear investigation data when resetting
     const gameState = {
         mainCompanyMoney,
@@ -593,7 +593,7 @@ function resetGameState() {
         hiredOfficials: [] // Clear RRHH data on reset
     };
     localStorage.setItem('wilowest_game_state', JSON.stringify(gameState));
-    
+
     // Reset UI
     updateMainDisplay();
     updateStatistics();
@@ -607,7 +607,7 @@ function saveGameState() {
     // First, get the existing game state to preserve investigation data
     const existingState = localStorage.getItem('wilowest_game_state');
     let existingGameState = {};
-    
+
     if (existingState) {
         try {
             existingGameState = JSON.parse(existingState);
@@ -615,7 +615,7 @@ function saveGameState() {
             console.error('Error parsing existing game state:', e);
         }
     }
-    
+
     const gameState = {
         mainCompanyMoney,
         totalCompaniesCreated,
@@ -650,10 +650,10 @@ function loadGameState() {
         totalMoneyEarned = gameState.totalMoneyEarned;
         researchPoints = gameState.researchPoints;
         for (const key in companyResources) companyResources[key] = gameState.companyResources[key] || 0;
-        
+
         // Load RRHH data
         hiredOfficials = gameState.hiredOfficials || [];
-        
+
         // Remove all company boxes and clear intervals
         companies.forEach(company => {
             if (company.intervalId) clearInterval(company.intervalId);
@@ -814,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Menu toggle functionality
     const menuToggle = document.querySelector('.menu-toggle');
     const menu = document.querySelector('.menu');
-    
+
     menuToggle.addEventListener('click', () => {
         menu.classList.toggle('active');
     });
@@ -876,24 +876,24 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- INVESTIGATION BONUS CALCULATION ---
 function getInvestigationBonus(companyType) {
     let totalBonus = 0;
-    
+
     // Get the current game state to check purchased investigations
     const saved = localStorage.getItem('wilowest_game_state');
     if (saved) {
         try {
             const gameState = JSON.parse(saved);
             const purchasedInvestigations = gameState.purchasedInvestigations || [];
-            
+
             // Map company types to their investigation IDs
             const companyTypeMap = {
                 'Petroleo': '1',
-                'Transporte': '2', 
+                'Transporte': '2',
                 'Banco': '3',
                 'Metalurgica': '4',
                 'Mineria': '5',
                 'Telecomunicaciones': '6'
             };
-            
+
             const companyNumber = companyTypeMap[companyType];
             if (companyNumber) {
                 // Find all purchased investigations for this company type
@@ -912,7 +912,7 @@ function getInvestigationBonus(companyType) {
             console.error('Error calculating investigation bonus:', e);
         }
     }
-    
+
     return totalBonus;
 }
 
@@ -950,7 +950,7 @@ function getInvestigationDataById(id) {
             { id: "6.2.1", name: "Satélites de Comunicación", effect: 20 }
         ]
     };
-    
+
     // Search for the investigation in all company types
     for (const [companyType, investigations] of Object.entries(investigationTrees)) {
         const investigation = investigations.find(inv => inv.id === id);
@@ -958,7 +958,7 @@ function getInvestigationDataById(id) {
             return investigation;
         }
     }
-    
+
     return null;
 }
 

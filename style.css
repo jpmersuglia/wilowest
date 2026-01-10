@@ -181,10 +181,16 @@ button:disabled {
 }
 
 #app {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 15px;
     margin-top: 15px;
+}
+
+@media (min-width: 768px) {
+    body {
+        max-width: 1200px;
+    }
 }
 
 /* Caja de compañía */
