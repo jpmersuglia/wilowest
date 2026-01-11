@@ -3,14 +3,16 @@ import { useGame } from '../contexts/GameContext';
 import { companyTypes, resourcePrices, getInvestigationBonus } from '../data/gameData';
 
 function CompanyBox({ company }) {
-  const { 
-    updateMoney, 
-    updateCompany, 
-    removeCompany, 
+  const {
+    updateMoney,
+    updateCompany,
+    removeCompany,
     updateResearchPoints,
     purchasedInvestigations,
     hiredOfficials,
-    mainCompanyMoney // <-- agregar aquí
+    addMoney,
+    companies,
+    mainCompanyMoney
   } = useGame();
 
   const [localCounter, setLocalCounter] = useState(company.counter || 0);
@@ -39,21 +41,21 @@ function CompanyBox({ company }) {
   // Calculate official bonus
   const calculateOfficialBonus = useCallback(() => {
     let totalBonus = 0;
-    const companyOfficials = hiredOfficials.filter(official => 
-      official.workingIn === company.name && 
+    const companyOfficials = hiredOfficials.filter(official =>
+      official.workingIn === company.name &&
       (!official.trainingUntil || new Date() >= new Date(official.trainingUntil))
     );
-    
+
     companyOfficials.forEach(official => {
       totalBonus += official.totalStats * 0.01;
     });
-    
+
     return totalBonus;
   }, [hiredOfficials, company.name]);
 
   // Get tier increment
   const getTierIncrement = useCallback(() => {
-    switch(company.tier) {
+    switch (company.tier) {
       case 0:
         return company.upgradeLevel || 0;
       case 1:
@@ -69,7 +71,7 @@ function CompanyBox({ company }) {
 
   // Get investigation chance
   const getInvestigationChance = useCallback(() => {
-    switch(company.tier) {
+    switch (company.tier) {
       case 0:
         return company.upgradeLevel || 0;
       case 1:
@@ -99,21 +101,22 @@ function CompanyBox({ company }) {
     const dividend = dividendRate / 100;
     const baseEarnings = 1;
     const resourceIncome = calculateResourceIncome();
-    
+
     const investigationBonus = getInvestigationBonus(company.type, purchasedInvestigations);
     const baseIncrement = getTierIncrement();
     const bonusAmount = (baseIncrement * investigationBonus) / 100;
-    
+
     const officialBonus = calculateOfficialBonus();
     const officialBonusAmount = (baseIncrement * officialBonus) / 100;
-    
+
     const totalEarnings = baseEarnings + resourceIncome + bonusAmount + officialBonusAmount;
     const companyEarnings = totalEarnings * (1 - dividend);
     const mainCompanyDividend = totalEarnings * dividend;
 
     setLocalCounter(prev => prev + companyEarnings);
     setLocalValue(prev => prev + companyEarnings);
-    updateMoney(mainCompanyMoney + mainCompanyDividend); // <-- corregido
+    setLocalValue(prev => prev + companyEarnings);
+    addMoney(mainCompanyDividend);
 
     // Check for research points generation
     const investigationChance = getInvestigationChance();
@@ -153,10 +156,62 @@ function CompanyBox({ company }) {
     }
   };
 
+  // Helper helper to check merge availability
+  const canMerge = useCallback(() => {
+    if (company.tier >= 3) return false;
+    // For Tier 0, require level 10
+    if (company.tier === 0 && (company.upgradeLevel || 0) < 10) return false;
+
+    const sameTypeCompanies = companies.filter(c =>
+      c.type === company.type &&
+      c.tier === company.tier &&
+      c.id !== company.id &&
+      (company.tier > 0 || (c.upgradeLevel || 0) >= 10)
+    );
+
+    return sameTypeCompanies.length >= 2;
+  }, [company, companies]);
+
+  // Handle merge
+  const handleMerge = () => {
+    if (!canMerge()) return;
+
+    const sameTypeCompanies = companies.filter(c =>
+      c.type === company.type &&
+      c.tier === company.tier &&
+      c.id !== company.id &&
+      (company.tier > 0 || (c.upgradeLevel || 0) >= 10)
+    );
+
+    if (sameTypeCompanies.length < 2) return;
+
+    const [company1, company2] = sameTypeCompanies.slice(0, 2);
+
+    const totalCounter = localCounter + (company1.counter || 0) + (company2.counter || 0);
+    const totalValue = localValue + (company1.value || 0) + (company2.value || 0);
+
+    // Remove the other 2 companies
+    removeCompany(company1.id);
+    removeCompany(company2.id);
+
+    // Update this company to next tier
+    const updatedCompany = {
+      ...company,
+      tier: company.tier + 1,
+      upgradeLevel: 0,
+      counter: totalCounter,
+      value: totalValue
+    };
+
+    updateCompany(updatedCompany);
+    setLocalCounter(totalCounter);
+    setLocalValue(totalValue);
+  };
+
   // Handle sell
   const handleSell = () => {
     if (window.confirm(`¿Estás seguro que deseas vender ${company.name} por $${localValue.toFixed(2)}?`)) {
-      updateMoney(mainCompanyMoney + localValue); // <-- corregido
+      addMoney(localValue);
       removeCompany(company.id);
     }
   };
@@ -167,21 +222,21 @@ function CompanyBox({ company }) {
       intervalRef.current = setInterval(() => {
         const dividend = dividendRate / 100;
         const resourceIncome = calculateResourceIncome();
-        
+
         const investigationBonus = getInvestigationBonus(company.type, purchasedInvestigations);
         const baseIncrement = getTierIncrement();
         const bonusAmount = (baseIncrement * investigationBonus) / 100;
-        
+
         const officialBonus = calculateOfficialBonus();
         const officialBonusAmount = (baseIncrement * officialBonus) / 100;
-        
+
         const totalEarnings = baseIncrement + resourceIncome + bonusAmount + officialBonusAmount;
         const companyEarnings = totalEarnings * (1 - dividend);
         const mainCompanyDividend = totalEarnings * dividend;
 
         setLocalValue(prev => prev + companyEarnings);
         setLocalCounter(prev => prev + companyEarnings);
-        updateMoney(prev => prev + mainCompanyDividend);
+        addMoney(mainCompanyDividend);
 
         // Check for research points generation
         const investigationChance = getInvestigationChance();
@@ -197,9 +252,9 @@ function CompanyBox({ company }) {
       }
     };
   }, [
-    company.tier, 
-    company.upgradeLevel, 
-    dividendRate, 
+    company.tier,
+    company.upgradeLevel,
+    dividendRate,
     company.type,
     calculateResourceIncome,
     getInvestigationBonus,
@@ -241,30 +296,37 @@ function CompanyBox({ company }) {
         </div>
         <p className="mainCounter">$ {localCounter.toFixed(2)}</p>
       </div>
-      
+
       <div className="company-actions">
         <button className="work" onClick={handleWork}>Trabajar</button>
         {company.tier === 0 && currentLevel < 10 && (
-          <button 
-            className="upgrade" 
+          <button
+            className="upgrade"
             onClick={handleUpgrade}
             disabled={localCounter < nextCost}
           >
             Mejorar {localCounter >= nextCost && <img src="/media/arrow-circle-up.svg" alt="Upgrade" className="upgrade-icon" />}
           </button>
         )}
+        <button
+          className="merge"
+          onClick={handleMerge}
+          style={{ display: canMerge() ? 'block' : 'none' }}
+        >
+          Merge
+        </button>
         <button className="sell" onClick={handleSell}>Vender</button>
       </div>
-      
+
       <div className="company-details">
         <p>Company Value: <span className="valueCounter">{localValue.toFixed(2)}</span></p>
         <div className="dividendControl">
-          Dividendos: 
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            value={dividendRate} 
+          Dividendos:
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={dividendRate}
             onChange={(e) => setDividendRate(parseInt(e.target.value))}
             className="dividendSlider"
           />

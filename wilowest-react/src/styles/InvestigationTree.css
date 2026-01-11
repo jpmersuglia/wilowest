@@ -1,0 +1,264 @@
+.investigation-container {
+    min-height: 100vh;
+    background-color: #121212;
+    color: white;
+    padding: 2rem;
+}
+
+.investigation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.investigation-header h1 {
+    color: #fff;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.stats-container {
+    display: flex;
+    gap: 2rem;
+    background: #1a1a1a;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    border: 1px solid #335428;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.back-btn {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+
+.back-btn:hover {
+    background: #1976d2;
+}
+
+.trees-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.investigation-tree {
+    background-color: #1a1a1a;
+    border: 2px solid #335428;
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.tree-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #4caf50;
+    border-bottom: 1px solid #335428;
+    padding-bottom: 0.5rem;
+}
+
+.branch-container {
+    margin-bottom: 1.5rem;
+    background-color: #0f0f0f;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #2a2a2a;
+}
+
+.branch-title {
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #ff9800;
+    background-color: #1a1a1a;
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: 1px solid #335428;
+}
+
+.technologies-grid {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tech-node {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #333;
+}
+
+.tech-node:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.tech-node img {
+    width: 32px;
+    height: 32px;
+}
+
+.tech-node.owned {
+    background: #2e7d32;
+    border: 2px solid #4caf50;
+}
+
+.tech-node.available {
+    background: #f57c00;
+    border: 2px solid #ff9800;
+}
+
+.tech-node.locked {
+    background: #c62828;
+    border: 2px solid #ef5350;
+    opacity: 0.8;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    color: white;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-icon {
+    width: 48px;
+    height: 48px;
+    margin-right: 1rem;
+    border-radius: 8px;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-icon.owned {
+    background: #2e7d32;
+}
+
+.modal-icon.available {
+    background: #f57c00;
+}
+
+.modal-icon.locked {
+    background: #c62828;
+}
+
+.modal-title h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.modal-description {
+    color: #ccc;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.modal-cost {
+    margin-bottom: 1.5rem;
+    background: #0f0f0f;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.cost-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.cost-item.affordable {
+    color: #4caf50;
+}
+
+.cost-item.expensive {
+    color: #ef5350;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.modal-btn.cancel {
+    background: #424242;
+    color: white;
+}
+
+.modal-btn.confirm {
+    background: #2196f3;
+    color: white;
+}
+
+.modal-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

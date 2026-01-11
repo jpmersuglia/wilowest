@@ -31,7 +31,10 @@ const ACTIONS = {
   UPDATE_OFFICIAL: 'UPDATE_OFFICIAL',
   ADD_INVESTIGATION: 'ADD_INVESTIGATION',
   LOAD_GAME_STATE: 'LOAD_GAME_STATE',
-  RESET_GAME: 'RESET_GAME'
+  RESET_GAME: 'RESET_GAME',
+  ADD_MONEY: 'ADD_MONEY',
+  SET_CANDIDATES: 'SET_CANDIDATES',
+  REMOVE_OFFICIAL: 'REMOVE_OFFICIAL'
 };
 
 // Reducer para manejar el estado
@@ -41,71 +44,92 @@ function gameReducer(state, action) {
       return {
         ...state,
         mainCompanyMoney: action.payload,
-        totalMoneyEarned: action.payload
+        totalMoneyEarned: action.payload > state.mainCompanyMoney
+          ? state.totalMoneyEarned + (action.payload - state.mainCompanyMoney)
+          : state.totalMoneyEarned
       };
-    
+
+    case ACTIONS.ADD_MONEY:
+      return {
+        ...state,
+        mainCompanyMoney: state.mainCompanyMoney + action.payload,
+        totalMoneyEarned: state.totalMoneyEarned + action.payload
+      };
+
     case ACTIONS.ADD_COMPANY:
       return {
         ...state,
         companies: [...state.companies, action.payload],
         totalCompaniesCreated: state.totalCompaniesCreated + 1
       };
-    
+
     case ACTIONS.UPDATE_COMPANY:
       return {
         ...state,
-        companies: state.companies.map(company => 
+        companies: state.companies.map(company =>
           company.id === action.payload.id ? action.payload : company
         )
       };
-    
+
     case ACTIONS.REMOVE_COMPANY:
       return {
         ...state,
         companies: state.companies.filter(company => company.id !== action.payload)
       };
-    
+
     case ACTIONS.UPDATE_RESOURCES:
       return {
         ...state,
         companyResources: { ...state.companyResources, ...action.payload }
       };
-    
+
     case ACTIONS.UPDATE_RESEARCH_POINTS:
       return {
         ...state,
         researchPoints: action.payload
       };
-    
+
     case ACTIONS.ADD_OFFICIAL:
       return {
         ...state,
         hiredOfficials: [...state.hiredOfficials, action.payload]
       };
-    
+
     case ACTIONS.UPDATE_OFFICIAL:
       return {
         ...state,
-        hiredOfficials: state.hiredOfficials.map(official => 
+        hiredOfficials: state.hiredOfficials.map(official =>
           official.id === action.payload.id ? action.payload : official
         )
       };
-    
+
+    case ACTIONS.REMOVE_OFFICIAL:
+      return {
+        ...state,
+        hiredOfficials: state.hiredOfficials.filter(o => o.id !== action.payload)
+      };
+
+    case ACTIONS.SET_CANDIDATES:
+      return {
+        ...state,
+        candidates: action.payload
+      };
+
     case ACTIONS.ADD_INVESTIGATION:
       return {
         ...state,
         purchasedInvestigations: [...state.purchasedInvestigations, action.payload]
       };
-    
+
     case ACTIONS.LOAD_GAME_STATE:
       return {
         ...state,
         ...action.payload
       };
-    
+
     case ACTIONS.RESET_GAME:
       return initialState;
-    
+
     default:
       return state;
   }
@@ -166,6 +190,10 @@ export function GameProvider({ children }) {
     dispatch({ type: ACTIONS.REMOVE_COMPANY, payload: companyId });
   };
 
+  const addMoney = (amount) => {
+    dispatch({ type: ACTIONS.ADD_MONEY, payload: amount });
+  };
+
   const updateResources = (resources) => {
     dispatch({ type: ACTIONS.UPDATE_RESOURCES, payload: resources });
   };
@@ -184,6 +212,14 @@ export function GameProvider({ children }) {
 
   const addInvestigation = (investigationId) => {
     dispatch({ type: ACTIONS.ADD_INVESTIGATION, payload: investigationId });
+  };
+
+  const setCandidates = (candidates) => {
+    dispatch({ type: ACTIONS.SET_CANDIDATES, payload: candidates });
+  };
+
+  const removeOfficial = (officialId) => {
+    dispatch({ type: ACTIONS.REMOVE_OFFICIAL, payload: officialId });
   };
 
   const resetGame = () => {
@@ -206,7 +242,10 @@ export function GameProvider({ children }) {
     updateOfficial,
     addInvestigation,
     resetGame,
-    saveGameState
+    saveGameState,
+    addMoney,
+    setCandidates,
+    removeOfficial
   };
 
   return (
