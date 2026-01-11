@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../contexts/GameContext';
+import Header from './Header';
 import '../styles/RRHH.css';
 
 // Constants for generation
@@ -147,12 +148,7 @@ function RRHH() {
 
   return (
     <div className="rrhh-container">
-      <header className="rrhh-header">
-        <h1>Recursos Humanos</h1>
-        <button onClick={() => navigate('/')} className="back-btn">
-          Volver al Inicio
-        </button>
-      </header>
+      <Header />
 
       {/* Search Section */}
       <div className="candidates-section">

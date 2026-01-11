@@ -85,16 +85,24 @@ function CompanyBox({ company }) {
     }
   }, [company.tier, company.upgradeLevel]);
 
-  // Auto-save company state to context
+  // Auto-save company state to context only when local values change
   useEffect(() => {
-    const updatedCompany = {
-      ...company,
-      counter: localCounter,
-      value: localValue,
-      dividendRate
-    };
-    updateCompany(updatedCompany);
-  }, [localCounter, localValue, dividendRate, company, updateCompany]);
+    // Check if values have actually changed before updating
+    if (
+      localCounter !== company.counter ||
+      localValue !== company.value ||
+      dividendRate !== company.dividendRate
+    ) {
+      const updatedCompany = {
+        ...company,
+        counter: localCounter,
+        value: localValue,
+        dividendRate
+      };
+      updateCompany(updatedCompany);
+    }
+  }, [localCounter, localValue, dividendRate]); // Removed company and updateCompany to break circular dependency
+
 
   // Handle work button click
   const handleWork = () => {
@@ -115,8 +123,8 @@ function CompanyBox({ company }) {
 
     setLocalCounter(prev => prev + companyEarnings);
     setLocalValue(prev => prev + companyEarnings);
-    setLocalValue(prev => prev + companyEarnings);
     addMoney(mainCompanyDividend);
+
 
     // Check for research points generation
     const investigationChance = getInvestigationChance();

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../contexts/GameContext';
 import { investigationTrees } from '../data/gameData';
+import Header from './Header';
 import '../styles/InvestigationTree.css';
 
 function InvestigationTree() {
@@ -37,6 +38,7 @@ function InvestigationTree() {
   };
 
   const isAffordable = (cost) => {
+    if (!cost) return false;
     return mainCompanyMoney >= cost[0] && researchPoints >= cost[1];
   };
 
@@ -59,24 +61,7 @@ function InvestigationTree() {
 
   return (
     <div className="investigation-container">
-      <header className="investigation-header">
-        <h1>Árbol de Investigación</h1>
-
-        <div className="stats-container">
-          <div className="stat-item">
-            <img src="/media/usd-circle.svg" alt="Money" className="resource-icon" />
-            <span>${mainCompanyMoney.toFixed(2)}</span>
-          </div>
-          <div className="stat-item">
-            <img src="/media/sparkles.svg" alt="Research" className="resource-icon" />
-            <span>{researchPoints}</span>
-          </div>
-        </div>
-
-        <button onClick={() => navigate('/')} className="back-btn">
-          Volver al Inicio
-        </button>
-      </header>
+      <Header />
 
       <div className="trees-grid">
         {Object.entries(investigationTrees).map(([type, items]) => {

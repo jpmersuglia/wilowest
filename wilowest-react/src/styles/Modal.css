@@ -1,72 +1,104 @@
 /* Modal Styles */
-.modal {
-  display: none;
+.modal-overlay {
   position: fixed;
-  z-index: 1000;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  overflow: auto;
-  background-color: rgba(20,20,20,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .modal-content {
   background-color: #fff;
   color: #222;
-  margin: 7% auto;
   padding: 28px 28px 18px 28px;
   border: 1px solid #888;
   width: 370px;
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
   position: relative;
-  font-family: inherit;
+  font-family: Arial, sans-serif;
 }
 
-.close {
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--primary-green);
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.close-btn {
   color: #888;
-  float: right;
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
+  background: none;
+  border: none;
   transition: color 0.2s;
 }
 
-.close:hover,
-.close:focus {
+.close-btn:hover {
   color: #d32f2f;
-  text-decoration: none;
-  cursor: pointer;
 }
 
-#companyCostDisplay {
-  margin: 12px 0 18px 0;
-  font-weight: bold;
-  color: #1976d2;
+.modal-body {
+  margin-bottom: 1.5rem;
 }
 
-#companyTypeSelect, #companyNameInput {
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-group select,
+.form-group input {
   width: 100%;
   padding: 8px 10px;
-  margin: 6px 0 14px 0;
   border: 1px solid #bbb;
   border-radius: 5px;
   font-size: 1rem;
   color: #222;
   background: #f7f7f7;
-  box-sizing: border-box;
 }
 
-#companyTypeSelect:focus, #companyNameInput:focus {
-  outline: 2px solid #1976d2;
+.form-group select:focus,
+.form-group input:focus {
+  outline: 2px solid var(--primary-green);
 }
 
-#confirmCreateCompanyBtn {
-  width: 100%;
+.modal-cost {
+  margin: 12px 0 18px 0;
+  font-weight: bold;
+  color: var(--primary-green);
+  text-align: center;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-btn {
+  flex: 1;
   padding: 10px 0;
-  background: #1976d2;
-  color: #fff;
   border: none;
   border-radius: 5px;
   font-size: 1.1rem;
@@ -75,16 +107,27 @@
   transition: background 0.2s;
 }
 
-#confirmCreateCompanyBtn:disabled {
+.modal-btn.primary {
+  background: var(--primary-green);
+  color: #fff;
+}
+
+.modal-btn.primary:hover:not(:disabled) {
+  background: var(--secondary-green);
+}
+
+.modal-btn.primary:disabled {
   background: #bbb;
   cursor: not-allowed;
 }
 
-label {
-  color: #333;
-  font-weight: 500;
-  margin-bottom: 2px;
-  display: block;
+.modal-btn.secondary {
+  background: #666;
+  color: #fff;
+}
+
+.modal-btn.secondary:hover {
+  background: #555;
 }
 
 .modal-preview-header {
@@ -107,7 +150,7 @@ label {
 .modal-preview-header .companyName {
   font-size: 1.3rem;
   font-weight: bold;
-  color: #1976d2;
+  color: var(--primary-green);
   margin: 0;
   letter-spacing: 0.5px;
 }
@@ -119,4 +162,4 @@ label {
     margin: 10% auto;
     padding: 20px;
   }
-} 
+}

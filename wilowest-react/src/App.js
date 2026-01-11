@@ -4,6 +4,7 @@ import { GameProvider } from './contexts/GameContext';
 import MainPage from './components/MainPage';
 import InvestigationTree from './components/InvestigationTree';
 import RRHH from './components/RRHH';
+import Statistics from './components/Statistics';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<MainPage />} />
             <Route path="/investigation" element={<InvestigationTree />} />
             <Route path="/rrhh" element={<RRHH />} />
+            <Route path="/statistics" element={<Statistics />} />
           </Routes>
         </div>
       </Router>
