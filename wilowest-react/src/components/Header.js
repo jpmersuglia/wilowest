@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, NavLink } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 import { useGame } from '../contexts/GameContext';
 import '../styles/Header.css';
 
 function Header() {
     const navigate = useNavigate();
-    const location = useLocation();
     const {
         mainCompanyMoney,
         researchPoints,

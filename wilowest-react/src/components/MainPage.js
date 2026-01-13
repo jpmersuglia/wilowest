@@ -8,8 +8,7 @@ import '../styles/MainPage.css';
 function MainPage() {
   const {
     mainCompanyMoney,
-    companies,
-    companyResources,
+    companies
   } = useGame();
 
   const [showCreateModal, setShowCreateModal] = useState(false);

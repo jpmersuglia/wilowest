@@ -1,187 +1,291 @@
-.investigation-container {
-    padding: 2rem;
-    background-color: var(--bg-dark);
-    color: var(--text-white);
-    min-height: 100vh;
-}
-
-.investigation-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    background-color: var(--bg-panel);
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 20px;
-}
-
-.investigation-header h1 {
-    color: var(--text-white);
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
-
-.stats-container {
+.trees-stack.unified {
     display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-.stat-item span {
-    color: var(--accent-money);
-}
-
-.stat-item:nth-child(2) span {
-    color: var(--accent-research);
-}
-
-.back-btn {
-    background-color: var(--primary-green);
-    color: var(--text-white);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-
-.back-btn:hover {
-    background-color: var(--secondary-green);
-}
-
-.trees-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    flex-direction: column;
     gap: 20px;
-    max-width: 1200px;
+    /* Reduced gap to minimize white space */
+    max-width: 1400px;
     margin: 0 auto;
+    padding-bottom: 60px;
 }
 
-.investigation-tree {
-    background-color: var(--bg-panel);
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
-    padding: 15px;
+.investigation-tree-seamless {
+    background: transparent;
+    border: none;
+    padding: 0;
     display: flex;
     flex-direction: column;
 }
 
-.tree-title {
-    font-size: 1.2em;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 15px;
-    color: var(--accent-money);
+.tree-meta {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px 25px;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
 }
 
-.branch-container {
-    margin-bottom: 20px;
+.treant-canvas.seamless {
+    width: 100%;
+    min-height: 250px;
+    /* Reduced min-height as well */
+    background-color: transparent;
+    /* Seamless background */
     padding: 10px;
-    background-color: var(--bg-input);
-    border-radius: 8px;
-    border: 1px solid #2a2a2a;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
 }
 
-.branch-title {
-    font-size: 1em;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 10px;
-    color: #ff9800;
-    background-color: var(--bg-panel);
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
+/* Custom scrollbar for seamless look */
+.treant-canvas.seamless::-webkit-scrollbar {
+    height: 4px;
 }
 
-.technologies-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    gap: 10px;
-    justify-items: center;
+.treant-canvas.seamless::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.treant-canvas.seamless::-webkit-scrollbar-thumb {
+    background: var(--accent-money);
+    border-radius: 2px;
+    opacity: 0.5;
+}
+
+.Treant>.node {
+    padding: 0;
+    border: none;
+    background: transparent;
 }
 
 .tech-node {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
+    width: 43px;
+    /* 38px (icon) + 5px */
+    height: 43px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    border: 2px solid transparent;
-    background: #666;
-    /* Default locked state */
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    padding: 0;
+    /* Ensure no padding pushes the icon */
 }
 
 .tech-node:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: scale(1.2) rotate(2deg);
+    border-color: var(--accent-money);
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+    z-index: 100;
 }
 
 .tech-node.available {
-    background: var(--primary-green);
-    border-color: var(--accent-money);
+    background: linear-gradient(135deg, var(--primary-green), #1b5e20);
+    border-color: #81c784;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
 }
 
 .tech-node.owned {
-    background: var(--accent-money);
+    background: linear-gradient(135deg, var(--accent-money), #f9a825);
+    border-color: #fff;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
 }
 
 .tech-node.locked {
-    background: #333;
-    opacity: 0.5;
+    background: #121212;
+    opacity: 0.4;
     cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.05);
 }
 
 .tech-node img {
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
     filter: brightness(0) invert(1);
+    opacity: 0.95;
+    transition: transform 0.3s ease;
+    display: block;
+    /* Avoid inline spacing issues */
+    margin: 0;
+    /* Ensure no margin pushes the icon */
 }
 
-/* Modal styles within InvestigationTree */
+.tech-node:hover img {
+    transform: scale(1.1);
+}
+
+/* Treant node text */
+.node-name {
+    color: #f5f5f5;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 5px;
+    width: 100px;
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.5px;
+}
+
+.tree-root-node {
+    background: #000;
+    border: 3px solid var(--accent-money);
+    color: var(--accent-money);
+    padding: 0;
+    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    /* Ensure image fills perfectly */
+}
+
+.tree-root-node:hover {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+    transform: scale(1.05);
+}
+
+.tree-root-node img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Fill the 100% of background */
+    filter: none;
+    /* Keep original colors for company logos */
+    border-radius: 50%;
+}
+
+.tree-root-node .node-name {
+    bottom: -30px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent-money);
+    text-transform: uppercase;
+}
+
+.branch-node {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 6px 18px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.branch-node .node-name {
+    display: none;
+}
+
+/* Connector adjustments for WEST orientation */
+.Treant .node {
+    z-index: 2;
+}
+
+/* Connector depth */
+.Treant svg {
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Modal refinements */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.92);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
+    z-index: 5000;
+    backdrop-filter: blur(15px);
 }
+
 
 .modal-content {
     background-color: var(--bg-panel);
-    border-radius: 16px;
-    padding: 2rem;
-    max-width: 500px;
+    border-radius: 24px;
+    padding: 2.5rem;
+    max-width: 550px;
     width: 90%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+    border: 1px solid #444;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-icon.owned {
+    background: var(--accent-money);
+}
+
+.modal-icon.available {
+    background: var(--primary-green);
+}
+
+.modal-icon.locked {
+    background: #444;
+}
+
+.modal-icon img {
+    width: 40px;
+    height: 40px;
+    filter: brightness(0) invert(1);
+}
+
+.modal-title h2 {
+    font-size: 1.8rem;
+    color: #fff;
+    margin: 0;
 }
 
 .modal-description {
     color: var(--text-gray);
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.modal-cost {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.cost-item {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
 }
 
 .cost-item.affordable {
@@ -189,12 +293,15 @@
 }
 
 .cost-item.expensive {
-    color: #d32f2f;
+    color: #ff5252;
 }
 
 .effect-info {
-    color: #4a90e2;
-    margin-top: 5px;
+    font-size: 1.1rem;
+    color: #4fc3f7;
+    border-top: 1px solid #444;
+    padding-top: 0.8rem;
+    margin-top: 0.8rem;
 }
 
 .modal-actions {
@@ -204,22 +311,38 @@
 }
 
 .modal-btn {
-    padding: 0.8rem 1.5rem;
+    padding: 1rem 2rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.2s;
 }
 
 .modal-btn.cancel {
-    background: #424242;
-    color: white;
+    background: #333;
+    color: #ccc;
+}
+
+.modal-btn.cancel:hover {
+    background: #444;
+    color: #fff;
 }
 
 .modal-btn.confirm {
     background: #2196f3;
     color: white;
+}
+
+.modal-btn.confirm:hover:not(:disabled) {
+    background: #1e88e5;
+    transform: translateY(-2px);
+}
+
+.modal-btn.confirm.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .modal-btn:disabled {

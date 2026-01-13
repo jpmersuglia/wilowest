@@ -1,30 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from '../contexts/GameContext';
 import { companyTypes, resourcePrices, getInvestigationBonus } from '../data/gameData';
 
 function CompanyBox({ company }) {
   const {
-    updateMoney,
+    // updateMoney,
     updateCompany,
     removeCompany,
     updateResearchPoints,
     purchasedInvestigations,
     hiredOfficials,
     addMoney,
-    companies,
-    mainCompanyMoney
+    companies
   } = useGame();
 
-  const [localCounter, setLocalCounter] = useState(company.counter || 0);
-  const [localValue, setLocalValue] = useState(company.value || 0);
   const [dividendRate, setDividendRate] = useState(company.dividendRate || 0);
-  const intervalRef = useRef(null);
-
-  // Sincronizar localCounter y localValue con el contexto
-  useEffect(() => {
-    setLocalCounter(company.counter || 0);
-    setLocalValue(company.value || 0);
-  }, [company.counter, company.value]);
 
   // Calculate resource income
   const calculateResourceIncome = useCallback(() => {
@@ -85,23 +75,15 @@ function CompanyBox({ company }) {
     }
   }, [company.tier, company.upgradeLevel]);
 
-  // Auto-save company state to context only when local values change
+  // Auto-save dividendRate to context when it changes
   useEffect(() => {
-    // Check if values have actually changed before updating
-    if (
-      localCounter !== company.counter ||
-      localValue !== company.value ||
-      dividendRate !== company.dividendRate
-    ) {
-      const updatedCompany = {
+    if (dividendRate !== company.dividendRate) {
+      updateCompany({
         ...company,
-        counter: localCounter,
-        value: localValue,
         dividendRate
-      };
-      updateCompany(updatedCompany);
+      });
     }
-  }, [localCounter, localValue, dividendRate]); // Removed company and updateCompany to break circular dependency
+  }, [dividendRate, company, updateCompany]);
 
 
   // Handle work button click
@@ -121,8 +103,11 @@ function CompanyBox({ company }) {
     const companyEarnings = totalEarnings * (1 - dividend);
     const mainCompanyDividend = totalEarnings * dividend;
 
-    setLocalCounter(prev => prev + companyEarnings);
-    setLocalValue(prev => prev + companyEarnings);
+    updateCompany({
+      ...company,
+      counter: (company.counter || 0) + companyEarnings,
+      value: (company.value || 0) + companyEarnings
+    });
     addMoney(mainCompanyDividend);
 
 
@@ -155,11 +140,11 @@ function CompanyBox({ company }) {
     const nextLevel = currentLevel + 1;
     const nextCost = upgradeLevels[nextLevel]?.cost;
 
-    if (localCounter >= nextCost && nextLevel <= 10) {
-      setLocalCounter(prev => prev - nextCost);
+    if ((company.counter || 0) >= nextCost && nextLevel <= 10) {
       updateCompany({
         ...company,
-        upgradeLevel: nextLevel
+        upgradeLevel: nextLevel,
+        counter: (company.counter || 0) - nextCost
       });
     }
   };
@@ -195,8 +180,8 @@ function CompanyBox({ company }) {
 
     const [company1, company2] = sameTypeCompanies.slice(0, 2);
 
-    const totalCounter = localCounter + (company1.counter || 0) + (company2.counter || 0);
-    const totalValue = localValue + (company1.value || 0) + (company2.value || 0);
+    const totalCounter = (company.counter || 0) + (company1.counter || 0) + (company2.counter || 0);
+    const totalValue = (company.value || 0) + (company1.value || 0) + (company2.value || 0);
 
     // Remove the other 2 companies
     removeCompany(company1.id);
@@ -212,67 +197,16 @@ function CompanyBox({ company }) {
     };
 
     updateCompany(updatedCompany);
-    setLocalCounter(totalCounter);
-    setLocalValue(totalValue);
   };
 
   // Handle sell
   const handleSell = () => {
-    if (window.confirm(`¿Estás seguro que deseas vender ${company.name} por $${localValue.toFixed(2)}?`)) {
-      addMoney(localValue);
+    if (window.confirm(`¿Estás seguro que deseas vender ${company.name} por $${(company.value || 0).toFixed(2)}?`)) {
+      addMoney(company.value || 0);
       removeCompany(company.id);
     }
   };
 
-  // Auto-income interval
-  useEffect(() => {
-    if (company.tier > 0 || (company.upgradeLevel && company.upgradeLevel > 0)) {
-      intervalRef.current = setInterval(() => {
-        const dividend = dividendRate / 100;
-        const resourceIncome = calculateResourceIncome();
-
-        const investigationBonus = getInvestigationBonus(company.type, purchasedInvestigations);
-        const baseIncrement = getTierIncrement();
-        const bonusAmount = (baseIncrement * investigationBonus) / 100;
-
-        const officialBonus = calculateOfficialBonus();
-        const officialBonusAmount = (baseIncrement * officialBonus) / 100;
-
-        const totalEarnings = baseIncrement + resourceIncome + bonusAmount + officialBonusAmount;
-        const companyEarnings = totalEarnings * (1 - dividend);
-        const mainCompanyDividend = totalEarnings * dividend;
-
-        setLocalValue(prev => prev + companyEarnings);
-        setLocalCounter(prev => prev + companyEarnings);
-        addMoney(mainCompanyDividend);
-
-        // Check for research points generation
-        const investigationChance = getInvestigationChance();
-        if (Math.random() * 100 < investigationChance) {
-          updateResearchPoints(prev => prev + 1);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [
-    company.tier,
-    company.upgradeLevel,
-    dividendRate,
-    company.type,
-    calculateResourceIncome,
-    getInvestigationBonus,
-    purchasedInvestigations,
-    getTierIncrement,
-    calculateOfficialBonus,
-    updateMoney,
-    updateResearchPoints,
-    getInvestigationChance
-  ]);
 
   const currentLevel = company.upgradeLevel || 0;
   const upgradeLevels = {
@@ -302,7 +236,7 @@ function CompanyBox({ company }) {
             {company.tier === 0 ? `Nivel ${currentLevel}` : `Tier ${company.tier}`}
           </span>
         </div>
-        <p className="mainCounter">$ {localCounter.toFixed(2)}</p>
+        <p className="mainCounter">$ {company.counter?.toFixed(2) || '0.00'}</p>
       </div>
 
       <div className="company-actions">
@@ -311,9 +245,9 @@ function CompanyBox({ company }) {
           <button
             className="upgrade"
             onClick={handleUpgrade}
-            disabled={localCounter < nextCost}
+            disabled={(company.counter || 0) < nextCost}
           >
-            Mejorar {localCounter >= nextCost && <img src="/media/arrow-circle-up.svg" alt="Upgrade" className="upgrade-icon" />}
+            Mejorar {(company.counter || 0) >= nextCost && <img src="/media/arrow-circle-up.svg" alt="Upgrade" className="upgrade-icon" />}
           </button>
         )}
         <button
@@ -327,7 +261,7 @@ function CompanyBox({ company }) {
       </div>
 
       <div className="company-details">
-        <p>Company Value: <span className="valueCounter">{localValue.toFixed(2)}</span></p>
+        <p>Company Value: <span className="valueCounter">{company.value?.toFixed(2) || '0.00'}</span></p>
         <div className="dividendControl">
           Dividendos:
           <input

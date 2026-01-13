@@ -3,6 +3,25 @@ import { useGame } from '../contexts/GameContext';
 import { companyTypes, resourcePrices, getInvestigationBonus } from '../data/gameData';
 import Header from './Header';
 import '../styles/Statistics.css';
+import {
+    Chart as ChartJS,
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+    Tooltip,
+    Legend
+} from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+
+ChartJS.register(
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+    Tooltip,
+    Legend
+);
 
 function Statistics() {
     const {
@@ -10,8 +29,7 @@ function Statistics() {
         totalCompaniesCreated,
         totalMoneyEarned,
         purchasedInvestigations,
-        hiredOfficials,
-        companyResources
+        hiredOfficials
     } = useGame();
 
     const calculateCompanyStats = (company) => {
@@ -67,11 +85,68 @@ function Statistics() {
         const researchPerMin = (investigationChance / 100) * 60;
 
         return {
+            name: company.name,
+            value: company.value || 0,
             moneyPerMin,
             profitPerMin,
             dividendsPerMin,
             researchPerMin
         };
+    };
+
+    const companyStats = companies.map(calculateCompanyStats);
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#e0e0e0',
+                    font: { size: 10 }
+                }
+            }
+        }
+    };
+
+    const companyValuesData = {
+        labels: companyStats.map(s => s.name),
+        datasets: [{
+            label: 'Valor de Empresa ($)',
+            data: companyStats.map(s => s.value),
+            backgroundColor: [
+                '#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4', '#ffeb3b', '#795548'
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    const dividendsData = {
+        labels: companyStats.map(s => s.name),
+        datasets: [{
+            label: 'Dividendos ($/min)',
+            data: companyStats.map(s => s.dividendsPerMin),
+            backgroundColor: '#f44336'
+        }]
+    };
+
+    const moneyPerMinData = {
+        labels: companyStats.map(s => s.name),
+        datasets: [{
+            label: 'Dinero ($/min)',
+            data: companyStats.map(s => s.moneyPerMin),
+            backgroundColor: '#4caf50'
+        }]
+    };
+
+    const researchPerMinData = {
+        labels: companyStats.map(s => s.name),
+        datasets: [{
+            label: 'Investigación (pts/min)',
+            data: companyStats.map(s => s.researchPerMin),
+            backgroundColor: '#9c27b0'
+        }]
     };
 
     return (
@@ -91,6 +166,33 @@ function Statistics() {
                     <div className="stat-card">
                         <h3>Compañías Activas</h3>
                         <p className="stat-value">{companies.length}</p>
+                    </div>
+                </section>
+
+                <section className="statistics-charts">
+                    <div className="chart-container">
+                        <h3>Valor de Empresas</h3>
+                        <div className="chart-wrapper">
+                            <Pie data={companyValuesData} options={chartOptions} />
+                        </div>
+                    </div>
+                    <div className="chart-container">
+                        <h3>Dividendos Pagados ($/min)</h3>
+                        <div className="chart-wrapper">
+                            <Bar data={dividendsData} options={chartOptions} />
+                        </div>
+                    </div>
+                    <div className="chart-container">
+                        <h3>Dinero Generado ($/min)</h3>
+                        <div className="chart-wrapper">
+                            <Bar data={moneyPerMinData} options={chartOptions} />
+                        </div>
+                    </div>
+                    <div className="chart-container">
+                        <h3>Investigación (pts/min)</h3>
+                        <div className="chart-wrapper">
+                            <Bar data={researchPerMinData} options={chartOptions} />
+                        </div>
                     </div>
                 </section>
 

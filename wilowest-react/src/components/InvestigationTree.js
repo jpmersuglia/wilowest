@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGame } from '../contexts/GameContext';
-import { investigationTrees } from '../data/gameData';
+import { investigationTrees, companyTypes } from '../data/gameData';
 import Header from './Header';
+import Raphael from 'raphael';
+import 'treantjs';
+import 'treantjs/Treant.css';
 import '../styles/InvestigationTree.css';
 
+// Treant depends on Raphael being in global scope
+window.Raphael = Raphael;
+
 function InvestigationTree() {
-  const navigate = useNavigate();
   const {
     mainCompanyMoney,
     researchPoints,
@@ -17,10 +21,11 @@ function InvestigationTree() {
   } = useGame();
 
   const [selectedTech, setSelectedTech] = useState(null);
+  const treeContainers = useRef({});
 
-  const handleTechClick = (tech, type) => {
-    setSelectedTech({ ...tech, type });
-  };
+  const handleTechClick = useCallback((tech) => {
+    setSelectedTech(tech);
+  }, []);
 
   const handleCloseModal = () => {
     setSelectedTech(null);
@@ -37,61 +42,131 @@ function InvestigationTree() {
     }
   };
 
-  const isAffordable = (cost) => {
+  const isAffordable = useCallback((cost) => {
     if (!cost) return false;
     return mainCompanyMoney >= cost[0] && researchPoints >= cost[1];
-  };
+  }, [mainCompanyMoney, researchPoints]);
 
-  const getStatus = (tech) => {
+  const getStatus = useCallback((tech) => {
     if (purchasedInvestigations.includes(tech.id)) return 'owned';
     if (isAffordable(tech.cost)) return 'available';
     return 'locked';
-  };
+  }, [purchasedInvestigations, isAffordable]);
 
-  // Group technologies by branch for rendering
-  const getBranches = (items) => {
-    const branches = {};
-    items.forEach(item => {
-      const branchNum = item.id.split('.')[1];
-      if (!branches[branchNum]) branches[branchNum] = [];
-      branches[branchNum].push(item);
+  useEffect(() => {
+    const charts = [];
+
+    Object.entries(investigationTrees).forEach(([type, items]) => {
+      const containerId = `tree-${type.replace(/\s+/g, '-')}`;
+      if (!treeContainers.current[containerId]) return;
+
+      // Group by branch
+      const branches = {};
+      items.forEach(item => {
+        const branchNum = item.id.split('.')[1];
+        if (!branches[branchNum]) branches[branchNum] = [];
+        branches[branchNum].push(item);
+      });
+
+      // Get company icon for the root
+      const companyInfo = companyTypes[type];
+      const rootIcon = companyInfo ? `/media/${companyInfo.icon}` : "/media/company-default-icon.svg";
+
+      // Horizontal Tree construction (Growing East)
+      const nodeStructure = {
+        text: { name: type },
+        image: rootIcon,
+        HTMLclass: 'tree-root-node',
+        children: Object.keys(branches).sort().map(branchNum => {
+          const branchTechs = branches[branchNum].sort((a, b) =>
+            parseInt(a.id.split('.')[2]) - parseInt(b.id.split('.')[2])
+          );
+
+          // Build a chain for the branch (for a single line per branch)
+          let currentChild = null;
+          for (let i = branchTechs.length - 1; i >= 0; i--) {
+            const tech = branchTechs[i];
+            const status = getStatus(tech);
+
+            const newNode = {
+              text: { name: tech.name },
+              HTMLclass: `tech-node ${status}`,
+              HTMLid: `tech-${tech.id.replace(/\./g, '-')}`,
+              image: "/media/technology-icon.svg",
+              contact: tech, // Store data in the node
+              children: currentChild ? [currentChild] : []
+            };
+            currentChild = newNode;
+          }
+
+          return {
+            text: { name: `Rama ${branchNum}` },
+            HTMLclass: 'branch-node',
+            children: currentChild ? [currentChild] : []
+          };
+        })
+      };
+
+      const chartConfig = {
+        chart: {
+          container: `#${containerId}`,
+          rootOrientation: 'WEST', // Grow from left to right
+          scrollbar: 'native',
+          siblingSeparation: 60,
+          levelSeparation: 100, // Increased for better curve visibility
+          connectors: {
+            type: 'bCurve', // Bézier Curve for wave-like paths
+            style: {
+              'stroke': '#747474ff',
+              'stroke-width': 3
+              // Solid line looks better for waves
+            }
+          },
+          node: {
+            HTMLclass: 'custom-treant-node'
+          }
+        },
+        nodeStructure: nodeStructure
+      };
+
+      try {
+        const chart = new window.Treant(chartConfig);
+        charts.push(chart);
+
+        // Add click listeners to nodes
+        setTimeout(() => {
+          items.forEach(tech => {
+            const element = document.getElementById(`tech-${tech.id.replace(/\./g, '-')}`);
+            if (element) {
+              element.onclick = () => handleTechClick(tech);
+            }
+          });
+        }, 150);
+
+      } catch (e) {
+        console.error("Error creating Treant chart:", e);
+      }
     });
-    return branches;
-  };
+
+    return () => {
+      // Cleanup
+    };
+  }, [getStatus, handleTechClick]);
 
   return (
     <div className="investigation-container">
       <Header />
 
-      <div className="trees-grid">
-        {Object.entries(investigationTrees).map(([type, items]) => {
-          const branches = getBranches(items);
-
+      <div className="trees-stack unified">
+        {Object.keys(investigationTrees).map(type => {
+          const containerId = `tree-${type.replace(/\s+/g, '-')}`;
           return (
-            <div key={type} className="investigation-tree">
-              <div className="tree-title">{type}</div>
-              {Object.keys(branches).sort().map(branchNum => (
-                <div key={branchNum} className="branch-container">
-                  <div className="branch-title">Rama {branchNum}</div>
-                  <div className="technologies-grid">
-                    {branches[branchNum]
-                      .sort((a, b) => parseInt(a.id.split('.')[2]) - parseInt(b.id.split('.')[2]))
-                      .map(tech => {
-                        const status = getStatus(tech);
-                        return (
-                          <div
-                            key={tech.id}
-                            className={`tech-node ${status}`}
-                            onClick={() => handleTechClick(tech, type)}
-                            title={tech.name}
-                          >
-                            <img src="/media/technology-icon.svg" alt="Tech" />
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              ))}
+            <div key={type} className="investigation-tree-seamless">
+              <div
+                id={containerId}
+                ref={el => treeContainers.current[containerId] = el}
+                className="treant-canvas seamless"
+              ></div>
             </div>
           );
         })}
@@ -109,7 +184,7 @@ function InvestigationTree() {
               </div>
             </div>
 
-            <p className="modal-description">{selectedTech.description}</p>
+            <p className="modal-description">{selectedTech.description || "Mejora la eficiencia de producción para este sector."}</p>
 
             <div className="modal-cost">
               <div className={`cost-item ${mainCompanyMoney >= selectedTech.cost[0] ? 'affordable' : 'expensive'}`}>
@@ -129,7 +204,7 @@ function InvestigationTree() {
               </button>
               {!purchasedInvestigations.includes(selectedTech.id) ? (
                 <button
-                  className="modal-btn confirm"
+                  className={`modal-btn confirm ${!isAffordable(selectedTech.cost) ? 'disabled' : ''}`}
                   disabled={!isAffordable(selectedTech.cost)}
                   onClick={handlePurchase}
                 >
@@ -148,4 +223,5 @@ function InvestigationTree() {
   );
 }
 
-export default InvestigationTree; 
+export default InvestigationTree;
+

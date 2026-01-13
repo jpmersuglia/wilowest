@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useGame } from '../contexts/GameContext';
 import Header from './Header';
 import '../styles/RRHH.css';
@@ -26,7 +25,6 @@ const specializations = ["Petroleo", "Transporte", "Banco", "Metalurgica", "Mine
 const statsList = ["Operativo", "Financiero", "Logístico", "Marketing", "Tecnológico", "Estratégico"];
 
 function RRHH() {
-  const navigate = useNavigate();
   const {
     candidates,
     hiredOfficials,
@@ -41,18 +39,6 @@ function RRHH() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [specializationFilter, setSpecializationFilter] = useState('');
 
-  // Check for training completion
-  useEffect(() => {
-    const interval = setInterval(() => {
-      let needsUpdate = false;
-      hiredOfficials.forEach(official => {
-        if (official.trainingUntil && new Date() >= new Date(official.trainingUntil)) {
-          updateOfficial({ ...official, trainingUntil: null });
-        }
-      });
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [hiredOfficials, updateOfficial]);
 
   const generateOfficial = (forceSpecialization = null) => {
     const id = Math.random().toString(36).substr(2, 9);

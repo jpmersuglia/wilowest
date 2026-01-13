@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { resourcePrices, getInvestigationBonus } from '../data/gameData';
 
 // Estado inicial del juego
 const initialState = {
@@ -34,7 +35,8 @@ const ACTIONS = {
   RESET_GAME: 'RESET_GAME',
   ADD_MONEY: 'ADD_MONEY',
   SET_CANDIDATES: 'SET_CANDIDATES',
-  REMOVE_OFFICIAL: 'REMOVE_OFFICIAL'
+  REMOVE_OFFICIAL: 'REMOVE_OFFICIAL',
+  TICK: 'TICK'
 };
 
 // Reducer para manejar el estado
@@ -130,6 +132,97 @@ function gameReducer(state, action) {
     case ACTIONS.RESET_GAME:
       return initialState;
 
+    case ACTIONS.TICK: {
+      const { companies, hiredOfficials, purchasedInvestigations, researchPoints, mainCompanyMoney, totalMoneyEarned } = state;
+      let newResearchPoints = researchPoints;
+      let additionalMainMoney = 0;
+
+      const updatedCompanies = companies.map(company => {
+        if (company.tier === 0 && (!company.upgradeLevel || company.upgradeLevel === 0)) {
+          return company;
+        }
+
+        // Calculate Tier Increment
+        let baseIncrement = 0;
+        switch (company.tier) {
+          case 0: baseIncrement = company.upgradeLevel || 0; break;
+          case 1: baseIncrement = 125; break;
+          case 2: baseIncrement = 175; break;
+          case 3: baseIncrement = 220; break;
+          default: baseIncrement = 0;
+        }
+
+        // Resource Income
+        let resourceIncome = 0;
+        if (company.consumes) {
+          company.consumes.forEach(resource => {
+            const available = company.resources?.[resource] || 0;
+            if (available > 0) {
+              resourceIncome += available * resourcePrices[resource];
+            }
+          });
+        }
+
+        // Investigation Bonus
+        const investigationBonus = getInvestigationBonus(company.type, purchasedInvestigations);
+        const bonusAmount = (baseIncrement * investigationBonus) / 100;
+
+        // Official Bonus
+        let officialBonusAmount = 0;
+        const companyOfficials = hiredOfficials.filter(official =>
+          official.workingIn === company.name &&
+          (!official.trainingUntil || new Date() >= new Date(official.trainingUntil))
+        );
+        companyOfficials.forEach(official => {
+          officialBonusAmount += (baseIncrement * (official.totalStats * 0.01));
+        });
+
+        const totalEarnings = baseIncrement + resourceIncome + bonusAmount + officialBonusAmount;
+        const dividend = (company.dividendRate || 0) / 100;
+        const companyEarnings = totalEarnings * (1 - dividend);
+        const mainCompanyDividend = totalEarnings * dividend;
+
+        additionalMainMoney += mainCompanyDividend;
+
+        // Research points generation
+        let investigationChance = 0;
+        switch (company.tier) {
+          case 0: investigationChance = company.upgradeLevel || 0; break;
+          case 1: investigationChance = 15; break;
+          case 2: investigationChance = 25; break;
+          case 3: investigationChance = 50; break;
+          default: investigationChance = 0;
+        }
+
+        if (Math.random() * 100 < investigationChance) {
+          newResearchPoints += 1;
+        }
+
+        return {
+          ...company,
+          counter: (company.counter || 0) + companyEarnings,
+          value: (company.value || 0) + companyEarnings
+        };
+      });
+
+      // Update hired officials training status
+      const updatedOfficials = hiredOfficials.map(official => {
+        if (official.trainingUntil && new Date() >= new Date(official.trainingUntil)) {
+          return { ...official, trainingUntil: null };
+        }
+        return official;
+      });
+
+      return {
+        ...state,
+        companies: updatedCompanies,
+        hiredOfficials: updatedOfficials,
+        researchPoints: newResearchPoints,
+        mainCompanyMoney: mainCompanyMoney + additionalMainMoney,
+        totalMoneyEarned: totalMoneyEarned + additionalMainMoney
+      };
+    }
+
     default:
       return state;
   }
@@ -150,6 +243,15 @@ export function useGame() {
 // Provider del contexto
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+
+  // Global Tick Interval
+  useEffect(() => {
+    const tickInterval = setInterval(() => {
+      dispatch({ type: ACTIONS.TICK });
+    }, 1000);
+
+    return () => clearInterval(tickInterval);
+  }, []);
 
   // Auto-guardado cada minuto
   useEffect(() => {
