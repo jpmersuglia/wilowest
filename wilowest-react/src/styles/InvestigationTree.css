@@ -25,13 +25,13 @@
 .treant-canvas.seamless {
     width: 100%;
     min-height: 250px;
-    /* Reduced min-height as well */
     background-color: transparent;
-    /* Seamless background */
     padding: 10px;
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
+    position: relative;
+    /* Crucial for connector positioning */
 }
 
 /* Custom scrollbar for seamless look */
@@ -196,10 +196,15 @@
     z-index: 2;
 }
 
-/* Connector depth */
+/* Connector depth and stability */
 .Treant svg {
     z-index: 1;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    /* Let clicks pass through to nodes */
 }
 
 /* Modal refinements */

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { resourcePrices, getInvestigationBonus } from '../data/gameData';
+import { resourcePrices, getInvestigationBonus, generateOfficial } from '../data/gameData';
 
 // Estado inicial del juego
 const initialState = {
@@ -17,7 +17,9 @@ const initialState = {
   hiredOfficials: [],
   companies: [],
   purchasedInvestigations: [],
-  candidates: []
+  candidates: [],
+  hrSearchUntil: null,
+  hrSearchFilter: ''
 };
 
 // Tipos de acciones para el reducer
@@ -36,6 +38,7 @@ const ACTIONS = {
   ADD_MONEY: 'ADD_MONEY',
   SET_CANDIDATES: 'SET_CANDIDATES',
   REMOVE_OFFICIAL: 'REMOVE_OFFICIAL',
+  START_HR_SEARCH: 'START_HR_SEARCH',
   TICK: 'TICK'
 };
 
@@ -88,8 +91,8 @@ function gameReducer(state, action) {
     case ACTIONS.UPDATE_RESEARCH_POINTS:
       return {
         ...state,
-        researchPoints: typeof action.payload === 'function' 
-          ? action.payload(state.researchPoints) 
+        researchPoints: typeof action.payload === 'function'
+          ? action.payload(state.researchPoints)
           : action.payload
       };
 
@@ -119,6 +122,13 @@ function gameReducer(state, action) {
         candidates: action.payload
       };
 
+    case ACTIONS.START_HR_SEARCH:
+      return {
+        ...state,
+        hrSearchUntil: action.payload.until,
+        hrSearchFilter: action.payload.filter
+      };
+
     case ACTIONS.ADD_INVESTIGATION:
       return {
         ...state,
@@ -135,9 +145,17 @@ function gameReducer(state, action) {
       return initialState;
 
     case ACTIONS.TICK: {
-      const { companies, hiredOfficials, purchasedInvestigations, researchPoints, mainCompanyMoney, totalMoneyEarned } = state;
+      const { companies, hiredOfficials, purchasedInvestigations, researchPoints, mainCompanyMoney, totalMoneyEarned, hrSearchUntil, hrSearchFilter } = state;
       let newResearchPoints = researchPoints;
       let additionalMainMoney = 0;
+      let newCandidates = state.candidates;
+      let newHrSearchUntil = hrSearchUntil;
+
+      // Handle HR Search Completion
+      if (hrSearchUntil && new Date() >= new Date(hrSearchUntil)) {
+        newCandidates = Array(5).fill(null).map(() => generateOfficial(hrSearchFilter || null));
+        newHrSearchUntil = null;
+      }
 
       const updatedCompanies = companies.map(company => {
         if (company.tier === 0 && (!company.upgradeLevel || company.upgradeLevel === 0)) {
@@ -207,10 +225,22 @@ function gameReducer(state, action) {
         };
       });
 
-      // Update hired officials training status
+      // Update hired officials training status and apply bonuses
       const updatedOfficials = hiredOfficials.map(official => {
         if (official.trainingUntil && new Date() >= new Date(official.trainingUntil)) {
-          return { ...official, trainingUntil: null };
+          // Training finished, apply the +1 stat bonus to highest stat
+          const highestStatEntry = Object.entries(official.stats).reduce((a, b) => a[1] > b[1] ? a : b);
+          const statName = highestStatEntry[0];
+
+          return {
+            ...official,
+            trainingUntil: null,
+            stats: {
+              ...official.stats,
+              [statName]: official.stats[statName] + 1
+            },
+            totalStats: official.totalStats + 1
+          };
         }
         return official;
       });
@@ -221,7 +251,9 @@ function gameReducer(state, action) {
         hiredOfficials: updatedOfficials,
         researchPoints: newResearchPoints,
         mainCompanyMoney: mainCompanyMoney + additionalMainMoney,
-        totalMoneyEarned: totalMoneyEarned + additionalMainMoney
+        totalMoneyEarned: totalMoneyEarned + additionalMainMoney,
+        candidates: newCandidates,
+        hrSearchUntil: newHrSearchUntil
       };
     }
 
@@ -255,13 +287,9 @@ export function GameProvider({ children }) {
     return () => clearInterval(tickInterval);
   }, []);
 
-  // Auto-guardado cada minuto
+  // Auto-guardado cada vez que cambie algo relevante
   useEffect(() => {
-    const interval = setInterval(() => {
-      localStorage.setItem('wilowest_game_state', JSON.stringify(state));
-    }, 60000);
-
-    return () => clearInterval(interval);
+    localStorage.setItem('wilowest_game_state', JSON.stringify(state));
   }, [state]);
 
   // Cargar estado guardado al iniciar
@@ -326,6 +354,12 @@ export function GameProvider({ children }) {
     dispatch({ type: ACTIONS.REMOVE_OFFICIAL, payload: officialId });
   };
 
+  const startHRSearch = (durationSeconds, filter = '') => {
+    const until = new Date();
+    until.setSeconds(until.getSeconds() + durationSeconds);
+    dispatch({ type: ACTIONS.START_HR_SEARCH, payload: { until: until.toISOString(), filter } });
+  };
+
   const resetGame = () => {
     dispatch({ type: ACTIONS.RESET_GAME });
   };
@@ -349,7 +383,8 @@ export function GameProvider({ children }) {
     saveGameState,
     addMoney,
     setCandidates,
-    removeOfficial
+    removeOfficial,
+    startHRSearch
   };
 
   return (
@@ -357,4 +392,4 @@ export function GameProvider({ children }) {
       {children}
     </GameContext.Provider>
   );
-} 
+}

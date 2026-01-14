@@ -110,12 +110,9 @@ function CreateCompanyModal({ onClose }) {
                 required
               >
                 <option value="" disabled>Selecciona un tipo</option>
-                <option value="Petroleo">Petróleo</option>
-                <option value="Transporte">Transporte</option>
-                <option value="Banco">Banco</option>
-                <option value="Metalurgica">Metalúrgica</option>
-                <option value="Mineria">Minería</option>
-                <option value="Telecomunicaciones">Telecomunicaciones</option>
+                {Object.keys(companyTypes).map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
               </select>
             </div>
 

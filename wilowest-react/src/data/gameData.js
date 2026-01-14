@@ -9,40 +9,53 @@ export const resourcePrices = {
 
 export const companyTypes = {
     Petroleo: {
+        idPrefix: "1",
         resource: "petroleo",
         icon: "Petroleo.svg",
         consumes: ["finanzas", "logistica"],
         cost: 60000
     },
     Transporte: {
+        idPrefix: "2",
         resource: "logistica",
         icon: "Transporte.svg",
-        consumes: [],
+        consumes: ["finanzas", "telecom"],
         cost: 55000
     },
     Banco: {
+        idPrefix: "3",
         resource: "finanzas",
         icon: "Banco.svg",
-        consumes: ["logistica"],
+        consumes: ["logistica", "telecom"],
         cost: 70000
     },
     Metalurgica: {
+        idPrefix: "4",
         resource: "hierro",
         icon: "Metalurgica.svg",
-        consumes: [],
+        consumes: ["finanzas", "logistica"],
         cost: 80000
     },
     Mineria: {
+        idPrefix: "5",
         resource: "carbon",
         icon: "Mineria.svg",
-        consumes: [],
+        consumes: ["finanzas", "logistica"],
         cost: 90000
     },
     Telecomunicaciones: {
-        resource: "logistica",
+        idPrefix: "6",
+        resource: "telecom",
         icon: "Telecomunicaciones.svg",
-        consumes: [],
+        consumes: ["finanzas", "logistica"],
         cost: 75000
+    },
+    DummyCompany: {
+        idPrefix: "7",
+        resource: "dummy",
+        icon: "Banco2.svg",
+        consumes: ["finanzas", "logistica"],
+        cost: 70
     }
 };
 
@@ -55,8 +68,71 @@ export const companyNames = [
     "Sage & Wilder", "Ellis & Vaughn", "Drake & Solis", "Beacon & Ash", "Orion & Co.", "Weston & Fox",
     "Luxe & Haven", "Briar & Knox", "Arrow & Finch", "Stonevale", "Horizon Forge", "Driftwood Collective",
     "Summitworks", "Brightfall Industries", "Ironhaven", "Lunaris Ventures", "Stellar Co.", "Vanguard Studio",
-    "Emberline"
+    "Emberline", "Nightreach", "Goldspire", "Ashenfall", "Silverwake", "Blackstone Forge", "Sunward", "Grimholt",
+    "Aurora Crest", "Frostmere", "Cinderhall", "Obsidian Vale", "Skyreach Industries", "Ravenmark",
+    "Dawnforge", "Ironwind", "Starfall Collective", "Whitmore & Sons", "Langley Brothers", "Crowe & Finch", "Redwood & Co.", "Marshall & Keene",
+    "Blake & Holloway", "Turner & Shaw", "Everett & Moore", "Caldwell & Price", "Harrison & Wolfe",
+    "North & Calder", "Milton & Reeves", "Quinn & Harper", "Lowell & Stone", "Baker & Frost",
+    "Atlas Group", "Northstar Ventures", "Crownfall Industries", "Highland Collective",
+    "Ironpeak Holdings", "Emberstone", "Silverline Ventures", "Trueforge", "Nova Harbor",
+    "Kingsway Studio"
 ];
+
+// HR Constants
+export const firstNames = [
+    "Alejandro", "María", "Carlos", "Ana", "Luis", "Carmen", "Javier", "Isabel", "Miguel", "Patricia",
+    "Roberto", "Laura", "Fernando", "Sofia", "Diego", "Valentina", "Ricardo", "Camila", "Andrés", "Daniela",
+    "Eduardo", "Gabriela", "Francisco", "Natalia", "Manuel", "Andrea", "José", "Paula", "David", "Mariana",
+    "Juan", "Carolina", "Pedro", "Lucía", "Antonio", "Valeria", "Rafael", "Adriana", "Alberto", "Claudia",
+    "Sergio", "Monica", "Héctor", "Verónica", "Raúl", "Elena", "Oscar", "Rosa", "Victor", "Teresa"
+];
+
+export const lastNames = [
+    "García", "Rodríguez", "López", "Martínez", "González", "Pérez", "Sánchez", "Ramírez", "Torres", "Flores",
+    "Rivera", "Morales", "Castro", "Ortiz", "Silva", "Cruz", "Reyes", "Moreno", "Jiménez", "Díaz",
+    "Romero", "Herrera", "Ruiz", "Vargas", "Mendoza", "Aguilar", "Ramos", "Medina", "Vega", "Castro",
+    "Fernández", "Gutiérrez", "Cortez", "Soto", "Rojas", "Contreras", "Salazar", "Miranda", "Luna", "Pacheco",
+    "Campos", "Vázquez", "Cervantes", "Molina", "Herrera", "Ramos", "Acosta", "Padilla", "Ríos", "Sierra"
+];
+
+export const roles = ["CEO", "CFO", "COO", "CTO", "CMO", "CHRO", "CLO", "CRO"];
+export const specializations = Object.keys(companyTypes);
+export const statsList = ["Operativo", "Financiero", "Logístico", "Marketing", "Tecnológico", "Estratégico"];
+
+// Helper to generate a new official
+export const generateOfficial = (forceSpecialization = null) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const role = roles[Math.floor(Math.random() * roles.length)];
+    const specialization = forceSpecialization || specializations[Math.floor(Math.random() * specializations.length)];
+
+    // Generate stats
+    const stats = {};
+    const standoutStat = statsList[Math.floor(Math.random() * statsList.length)];
+
+    statsList.forEach(stat => {
+        if (stat === standoutStat) {
+            stats[stat] = Math.floor(Math.random() * 5) + 8; // 8-12
+        } else {
+            stats[stat] = Math.floor(Math.random() * 4) + 3; // 3-6
+        }
+    });
+
+    const totalStats = Object.values(stats).reduce((a, b) => a + b, 0);
+
+    return {
+        id,
+        name: `${firstName} ${lastName}`,
+        avatar: "human-avatar.svg",
+        role,
+        specialization,
+        stats,
+        totalStats,
+        workingIn: null,
+        trainingUntil: null
+    };
+};
 
 // Investigation tree data structure
 export const investigationTrees = {
@@ -89,17 +165,12 @@ export const investigationTrees = {
         { id: "6.1.1", name: "Fibra Óptica", effect: 5, cost: [18000, 180] },
         { id: "6.1.2", name: "5G Network", effect: 10, cost: [50000, 500] },
         { id: "6.2.1", name: "Satélites de Comunicación", effect: 20, cost: [250000, 2500] }
+    ],
+    DummyCompany: [
+        { id: "7.1.1", name: "Test1", effect: 5, cost: [1000, 180] },
+        { id: "7.1.2", name: "Test2", effect: 10, cost: [5000, 500] },
+        { id: "7.2.1", name: "Test3", effect: 20, cost: [2000, 200] }
     ]
-};
-
-// Company type to investigation ID mapping
-export const companyTypeMap = {
-    'Petroleo': '1',
-    'Transporte': '2', 
-    'Banco': '3',
-    'Metalurgica': '4',
-    'Mineria': '5',
-    'Telecomunicaciones': '6'
 };
 
 // Helper function to get investigation data by ID
@@ -116,11 +187,13 @@ export function getInvestigationDataById(id) {
 // Helper function to calculate investigation bonus
 export function getInvestigationBonus(companyType, purchasedInvestigations) {
     let totalBonus = 0;
-    
-    const companyNumber = companyTypeMap[companyType];
-    if (companyNumber) {
+
+    const companyInfo = companyTypes[companyType];
+    const idPrefix = companyInfo?.idPrefix;
+
+    if (idPrefix) {
         purchasedInvestigations.forEach(id => {
-            if (id.startsWith(companyNumber + '.')) {
+            if (id.startsWith(idPrefix + '.')) {
                 const investigationData = getInvestigationDataById(id);
                 if (investigationData) {
                     totalBonus += investigationData.effect;
@@ -128,6 +201,6 @@ export function getInvestigationBonus(companyType, purchasedInvestigations) {
             }
         });
     }
-    
+
     return totalBonus;
-} 
+}

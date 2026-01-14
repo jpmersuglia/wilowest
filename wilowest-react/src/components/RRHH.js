@@ -1,96 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../contexts/GameContext';
 import Header from './Header';
+import { specializations, generateOfficial } from '../data/gameData';
 import '../styles/RRHH.css';
-
-// Constants for generation
-const firstNames = [
-  "Alejandro", "María", "Carlos", "Ana", "Luis", "Carmen", "Javier", "Isabel", "Miguel", "Patricia",
-  "Roberto", "Laura", "Fernando", "Sofia", "Diego", "Valentina", "Ricardo", "Camila", "Andrés", "Daniela",
-  "Eduardo", "Gabriela", "Francisco", "Natalia", "Manuel", "Andrea", "José", "Paula", "David", "Mariana",
-  "Juan", "Carolina", "Pedro", "Lucía", "Antonio", "Valeria", "Rafael", "Adriana", "Alberto", "Claudia",
-  "Sergio", "Monica", "Héctor", "Verónica", "Raúl", "Elena", "Oscar", "Rosa", "Victor", "Teresa"
-];
-
-const lastNames = [
-  "García", "Rodríguez", "López", "Martínez", "González", "Pérez", "Sánchez", "Ramírez", "Torres", "Flores",
-  "Rivera", "Morales", "Castro", "Ortiz", "Silva", "Cruz", "Reyes", "Moreno", "Jiménez", "Díaz",
-  "Romero", "Herrera", "Ruiz", "Vargas", "Mendoza", "Aguilar", "Ramos", "Medina", "Vega", "Castro",
-  "Fernández", "Gutiérrez", "Cortez", "Soto", "Rojas", "Contreras", "Salazar", "Miranda", "Luna", "Pacheco",
-  "Campos", "Vázquez", "Cervantes", "Molina", "Herrera", "Ramos", "Acosta", "Padilla", "Ríos", "Sierra"
-];
-
-const roles = ["CEO", "CFO", "COO", "CTO", "CMO", "CHRO", "CLO", "CRO"];
-const specializations = ["Petroleo", "Transporte", "Banco", "Metalurgica", "Mineria", "Telecomunicaciones"];
-const statsList = ["Operativo", "Financiero", "Logístico", "Marketing", "Tecnológico", "Estratégico"];
 
 function RRHH() {
   const {
     candidates,
     hiredOfficials,
     companies,
+    hrSearchUntil,
+    hrSearchFilter,
     setCandidates,
     addOfficial,
     updateOfficial,
-    removeOfficial
+    removeOfficial,
+    startHRSearch
   } = useGame();
 
-  const [searchInProgress, setSearchInProgress] = useState(false);
+  const [specializationFilter, setSpecializationFilter] = useState(hrSearchFilter || '');
   const [timeLeft, setTimeLeft] = useState(0);
-  const [specializationFilter, setSpecializationFilter] = useState('');
 
+  // Update countdown timer
+  useEffect(() => {
+    if (!hrSearchUntil) {
+      setTimeLeft(0);
+      return;
+    }
 
-  const generateOfficial = (forceSpecialization = null) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const role = roles[Math.floor(Math.random() * roles.length)];
-    const specialization = forceSpecialization || specializations[Math.floor(Math.random() * specializations.length)];
+    const interval = setInterval(() => {
+      const now = new Date();
+      const until = new Date(hrSearchUntil);
+      const diff = Math.max(0, Math.floor((until - now) / 1000));
+      setTimeLeft(diff);
 
-    // Generate stats
-    const stats = {};
-    const standoutStat = statsList[Math.floor(Math.random() * statsList.length)];
-
-    statsList.forEach(stat => {
-      if (stat === standoutStat) {
-        stats[stat] = Math.floor(Math.random() * 5) + 8; // 8-12
-      } else {
-        stats[stat] = Math.floor(Math.random() * 4) + 3; // 3-6
+      if (diff <= 0) {
+        clearInterval(interval);
       }
-    });
+    }, 1000);
 
-    const totalStats = Object.values(stats).reduce((a, b) => a + b, 0);
-
-    return {
-      id,
-      name: `${firstName} ${lastName}`,
-      avatar: "human-avatar.svg",
-      role,
-      specialization,
-      stats,
-      totalStats,
-      workingIn: null,
-      trainingUntil: null
-    };
-  };
+    return () => clearInterval(interval);
+  }, [hrSearchUntil]);
 
   const startSearch = () => {
-    if (searchInProgress) return;
-    setSearchInProgress(true);
-    setTimeLeft(60);
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setSearchInProgress(false);
-          const newCandidates = Array(5).fill(null).map(() => generateOfficial(specializationFilter || null));
-          setCandidates(newCandidates);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000); // Changed to 100ms for testing? No, keep 1s
+    if (hrSearchUntil) return;
+    // 10 minutes = 600 seconds
+    startHRSearch(600, specializationFilter);
   };
 
   const handleHire = (candidate) => {
@@ -110,26 +65,33 @@ function RRHH() {
   };
 
   const handleTrain = (official) => {
-    // Find highest stat
-    const highestStatEntry = Object.entries(official.stats).reduce((a, b) => a[1] > b[1] ? a : b);
-    const statName = highestStatEntry[0];
-
     const trainingEnd = new Date();
-    trainingEnd.setMinutes(trainingEnd.getMinutes() + 5);
+    // 24 hours training as requested
+    trainingEnd.setHours(trainingEnd.getHours() + 24);
 
     updateOfficial({
       ...official,
-      stats: {
-        ...official.stats,
-        [statName]: official.stats[statName] + 1
-      },
-      totalStats: official.totalStats + 1,
       trainingUntil: trainingEnd.toISOString()
     });
   };
 
   const isTraining = (official) => {
     return official.trainingUntil && new Date() < new Date(official.trainingUntil);
+  };
+
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    return `${m}m ${s}s`;
+  };
+
+  const getTrainingTimeLeft = (official) => {
+    if (!official.trainingUntil) return '';
+    const diff = Math.max(0, Math.floor((new Date(official.trainingUntil) - new Date()) / 1000));
+    return formatTime(diff);
   };
 
   return (
@@ -145,7 +107,7 @@ function RRHH() {
               className="search-select"
               value={specializationFilter}
               onChange={(e) => setSpecializationFilter(e.target.value)}
-              disabled={searchInProgress}
+              disabled={!!hrSearchUntil}
             >
               <option value="">Todas las especializaciones</option>
               {specializations.map(s => <option key={s} value={s}>{s}</option>)}
@@ -153,15 +115,13 @@ function RRHH() {
             <button
               className="search-btn"
               onClick={startSearch}
-              disabled={searchInProgress}
+              disabled={!!hrSearchUntil}
             >
-              Forzar Búsqueda
+              Forzar Búsqueda (10m)
             </button>
             <button
               className="search-btn"
               onClick={() => {
-                setSearchInProgress(false);
-                setTimeLeft(0);
                 const newCandidates = Array(5).fill(null).map(() => generateOfficial(specializationFilter || null));
                 setCandidates(newCandidates);
               }}
@@ -172,20 +132,20 @@ function RRHH() {
           </div>
         </div>
 
-        {searchInProgress && (
+        {hrSearchUntil && (
           <div className="search-progress">
             <div className="progress-bar">
               <div
                 className="progress-fill"
-                style={{ width: `${((60 - timeLeft) / 60) * 100}%`, transition: 'width 1s linear' }}
+                style={{ width: `${((600 - timeLeft) / 600) * 100}%`, transition: 'width 1s linear' }}
               ></div>
             </div>
-            <p>Buscando candidatos... {timeLeft}s</p>
+            <p>Buscando candidatos... {formatTime(timeLeft)}</p>
           </div>
         )}
 
         <div className="grid-container">
-          {candidates.length === 0 && !searchInProgress && <p>No hay candidatos. Inicia una búsqueda.</p>}
+          {candidates.length === 0 && !hrSearchUntil && <p>No hay candidatos. Inicia una búsqueda.</p>}
           {candidates.map(candidate => (
             <div key={candidate.id} className="person-card">
               <div className="person-header">
@@ -244,7 +204,7 @@ function RRHH() {
                     <p className="specialization">{official.specialization}</p>
                   </div>
                   <div className={`status-badge ${training ? 'training' : 'active'}`}>
-                    {training ? 'Entrenando' : 'Activo'}
+                    {training ? `Entrenando (${getTrainingTimeLeft(official)})` : 'Activo'}
                   </div>
                 </div>
 
@@ -275,7 +235,7 @@ function RRHH() {
                     onClick={() => handleTrain(official)}
                     disabled={training}
                   >
-                    Entrenar (+1 Stat)
+                    Entrenar (+1 Stat / 24h)
                   </button>
                   <button
                     className="action-btn fire-btn"
@@ -293,4 +253,4 @@ function RRHH() {
   );
 }
 
-export default RRHH; 
+export default RRHH;

@@ -56,9 +56,16 @@ function InvestigationTree() {
   useEffect(() => {
     const charts = [];
 
+    // Clear previous charts content from DOM if any and from ref
+    Object.keys(treeContainers.current).forEach(id => {
+      const el = treeContainers.current[id];
+      if (el) el.innerHTML = '';
+    });
+
     Object.entries(investigationTrees).forEach(([type, items]) => {
       const containerId = `tree-${type.replace(/\s+/g, '-')}`;
-      if (!treeContainers.current[containerId]) return;
+      const container = treeContainers.current[containerId];
+      if (!container) return;
 
       // Group by branch
       const branches = {};
@@ -68,11 +75,9 @@ function InvestigationTree() {
         branches[branchNum].push(item);
       });
 
-      // Get company icon for the root
       const companyInfo = companyTypes[type];
       const rootIcon = companyInfo ? `/media/${companyInfo.icon}` : "/media/company-default-icon.svg";
 
-      // Horizontal Tree construction (Growing East)
       const nodeStructure = {
         text: { name: type },
         image: rootIcon,
@@ -82,18 +87,18 @@ function InvestigationTree() {
             parseInt(a.id.split('.')[2]) - parseInt(b.id.split('.')[2])
           );
 
-          // Build a chain for the branch (for a single line per branch)
           let currentChild = null;
           for (let i = branchTechs.length - 1; i >= 0; i--) {
             const tech = branchTechs[i];
-            const status = getStatus(tech);
+            const status = purchasedInvestigations.includes(tech.id) ? 'owned' :
+              (isAffordable(tech.cost) ? 'available' : 'locked');
 
             const newNode = {
               text: { name: tech.name },
               HTMLclass: `tech-node ${status}`,
               HTMLid: `tech-${tech.id.replace(/\./g, '-')}`,
               image: "/media/technology-icon.svg",
-              contact: tech, // Store data in the node
+              contact: tech,
               children: currentChild ? [currentChild] : []
             };
             currentChild = newNode;
@@ -110,16 +115,15 @@ function InvestigationTree() {
       const chartConfig = {
         chart: {
           container: `#${containerId}`,
-          rootOrientation: 'WEST', // Grow from left to right
+          rootOrientation: 'WEST',
           scrollbar: 'native',
           siblingSeparation: 60,
-          levelSeparation: 100, // Increased for better curve visibility
+          levelSeparation: 100,
           connectors: {
-            type: 'bCurve', // Bézier Curve for wave-like paths
+            type: 'bCurve',
             style: {
-              'stroke': '#747474ff',
+              'stroke': '#747474', // Fixed 6-digit hex
               'stroke-width': 3
-              // Solid line looks better for waves
             }
           },
           node: {
@@ -141,7 +145,7 @@ function InvestigationTree() {
               element.onclick = () => handleTechClick(tech);
             }
           });
-        }, 150);
+        }, 300);
 
       } catch (e) {
         console.error("Error creating Treant chart:", e);
@@ -149,9 +153,29 @@ function InvestigationTree() {
     });
 
     return () => {
-      // Cleanup
+      // Treant doesn't have a formal destroy, but we clear the DOM
+      Object.keys(treeContainers.current).forEach(id => {
+        const el = treeContainers.current[id];
+        if (el) el.innerHTML = '';
+      });
     };
-  }, [getStatus, handleTechClick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleTechClick]); // Only re-run if handlers change (should be stable)
+
+  // Effect to update node statuses without re-drawing the whole tree
+  useEffect(() => {
+    Object.values(investigationTrees).flat().forEach(tech => {
+      const element = document.getElementById(`tech-${tech.id.replace(/\./g, '-')}`);
+      if (element) {
+        const status = purchasedInvestigations.includes(tech.id) ? 'owned' :
+          (isAffordable(tech.cost) ? 'available' : 'locked');
+
+        // Remove old status classes manually for performance
+        element.classList.remove('owned', 'available', 'locked');
+        element.classList.add(status);
+      }
+    });
+  }, [purchasedInvestigations, isAffordable]);
 
   return (
     <div className="investigation-container">

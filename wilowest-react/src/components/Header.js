@@ -43,7 +43,7 @@ function Header() {
             <div className="header-content">
                 <div className="header-top">
                     <div className="logo" onClick={() => navigate('/')}>
-                        <h1>Wilowest</h1>
+                        <h1>Tycoon</h1>
                     </div>
 
                     <div className="main-stats-container">
