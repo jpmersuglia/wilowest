@@ -88,7 +88,9 @@ function gameReducer(state, action) {
     case ACTIONS.UPDATE_RESEARCH_POINTS:
       return {
         ...state,
-        researchPoints: action.payload
+        researchPoints: typeof action.payload === 'function' 
+          ? action.payload(state.researchPoints) 
+          : action.payload
       };
 
     case ACTIONS.ADD_OFFICIAL:
