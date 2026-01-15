@@ -150,6 +150,25 @@ function gameReducer(state, action) {
       let additionalMainMoney = 0;
       let newCandidates = state.candidates;
       let newHrSearchUntil = hrSearchUntil;
+      let generatedResources = { ...state.companyResources };
+
+      // Calculate global production rates per tick
+      const globalProductionRates = {};
+      companies.forEach(company => {
+        if (!company.resource) return;
+        let amount = 0;
+        switch (company.tier) {
+          case 0:
+            const upgradeLevels = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10 };
+            amount = upgradeLevels[company.upgradeLevel || 0] || 0;
+            break;
+          case 1: amount = 15; break;
+          case 2: amount = 25; break;
+          case 3: amount = 50; break;
+          default: amount = 0;
+        }
+        globalProductionRates[company.resource] = (globalProductionRates[company.resource] || 0) + amount;
+      });
 
       // Handle HR Search Completion
       if (hrSearchUntil && new Date() >= new Date(hrSearchUntil)) {
@@ -172,13 +191,13 @@ function gameReducer(state, action) {
           default: baseIncrement = 0;
         }
 
-        // Resource Income
+        // Resource Income (Consumption Synergy)
         let resourceIncome = 0;
         if (company.consumes) {
           company.consumes.forEach(resource => {
-            const available = company.resources?.[resource] || 0;
-            if (available > 0) {
-              resourceIncome += available * resourcePrices[resource];
+            const productionRate = globalProductionRates[resource] || 0;
+            if (productionRate > 0) {
+              resourceIncome += productionRate * resourcePrices[resource];
             }
           });
         }
@@ -218,6 +237,26 @@ function gameReducer(state, action) {
           newResearchPoints += 1;
         }
 
+        // Resource generation
+        if (company.resource) {
+          let resourceAmount = 0;
+          switch (company.tier) {
+            case 0:
+              const upgradeLevels = {
+                0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10
+              };
+              resourceAmount = upgradeLevels[company.upgradeLevel || 0] || 0;
+              break;
+            case 1: resourceAmount = 15; break;
+            case 2: resourceAmount = 25; break;
+            case 3: resourceAmount = 50; break;
+            default: resourceAmount = 0;
+          }
+          if (resourceAmount > 0) {
+            generatedResources[company.resource] = (generatedResources[company.resource] || 0) + resourceAmount;
+          }
+        }
+
         return {
           ...company,
           counter: (company.counter || 0) + companyEarnings,
@@ -253,7 +292,8 @@ function gameReducer(state, action) {
         mainCompanyMoney: mainCompanyMoney + additionalMainMoney,
         totalMoneyEarned: totalMoneyEarned + additionalMainMoney,
         candidates: newCandidates,
-        hrSearchUntil: newHrSearchUntil
+        hrSearchUntil: newHrSearchUntil,
+        companyResources: generatedResources
       };
     }
 

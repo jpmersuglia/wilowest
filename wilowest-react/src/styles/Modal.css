@@ -5,22 +5,22 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
 }
 
 .modal-content {
-  background-color: #fff;
-  color: #222;
+  background-color: var(--bg-panel);
+  color: var(--text-white);
   padding: 28px 28px 18px 28px;
-  border: 1px solid #888;
+  border: 1px solid var(--border-color);
   width: 370px;
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   position: relative;
   font-family: Arial, sans-serif;
 }
@@ -34,13 +34,13 @@
 
 .modal-header h2 {
   margin: 0;
-  color: var(--primary-green);
+  color: var(--accent-money);
   font-size: 1.5rem;
   font-weight: bold;
 }
 
 .close-btn {
-  color: #888;
+  color: var(--text-gray);
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
@@ -50,7 +50,7 @@
 }
 
 .close-btn:hover {
-  color: #d32f2f;
+  color: #ff5252;
 }
 
 .modal-body {
@@ -62,7 +62,7 @@
 }
 
 .form-group label {
-  color: #333;
+  color: var(--text-gray);
   font-weight: 500;
   margin-bottom: 6px;
   display: block;
@@ -72,22 +72,22 @@
 .form-group input {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #bbb;
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   font-size: 1rem;
-  color: #222;
-  background: #f7f7f7;
+  color: var(--text-white);
+  background: var(--bg-input);
 }
 
 .form-group select:focus,
 .form-group input:focus {
-  outline: 2px solid var(--primary-green);
+  outline: 2px solid var(--accent-money);
 }
 
 .modal-cost {
   margin: 12px 0 18px 0;
   font-weight: bold;
-  color: var(--primary-green);
+  color: var(--accent-money);
   text-align: center;
 }
 
@@ -117,12 +117,13 @@
 }
 
 .modal-btn.primary:disabled {
-  background: #bbb;
+  background: #444;
   cursor: not-allowed;
+  color: #888;
 }
 
 .modal-btn.secondary {
-  background: #666;
+  background: #444;
   color: #fff;
 }
 
@@ -139,18 +140,21 @@
 }
 
 .modal-preview-header .companyImage {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  background: #eee;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  /* Oval/Circular as requested */
+  background: var(--bg-input);
+  border: 2px solid var(--accent-money);
   object-fit: contain;
   display: block;
+  padding: 4px;
 }
 
 .modal-preview-header .companyName {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  color: var(--primary-green);
+  color: var(--text-white);
   margin: 0;
   letter-spacing: 0.5px;
 }
@@ -162,4 +166,114 @@
     margin: 10% auto;
     padding: 20px;
   }
+}
+
+/* Company Details Modal Specifics */
+.company-details-modal {
+  width: 450px;
+}
+
+.close-btn.top-right {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.company-basic-info {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.detail-row {
+  margin: 5px 0;
+  font-size: 1rem;
+  color: var(--text-gray);
+}
+
+.income-breakdown h3,
+.executive-structure h3 {
+  font-size: 0.9rem;
+  color: var(--accent-money);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+  text-align: center;
+}
+
+.breakdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.95rem;
+  color: var(--text-gray);
+}
+
+.breakdown-item.positive .amount {
+  color: var(--accent-money);
+  font-weight: bold;
+}
+
+.breakdown-item.negative .amount {
+  color: #ff5252;
+  font-weight: bold;
+}
+
+.breakdown-item.total {
+  border-top: 2px solid var(--accent-money);
+  margin-top: 10px;
+  padding-top: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--text-white);
+}
+
+.breakdown-item.total .amount {
+  color: var(--accent-money);
+}
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.role-tag {
+  background: var(--bg-input);
+  color: var(--text-gray);
+  padding: 6px;
+  text-align: center;
+  border-radius: 6px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.role-tag:hover {
+  border-color: var(--accent-money);
+  color: var(--accent-money);
+}
+
+/* Interactivity */
+.company-name-cell.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.company-name-cell.clickable:hover {
+  background: rgba(76, 175, 80, 0.1);
+  color: var(--accent-money);
 }

@@ -81,8 +81,12 @@
 }
 
 .table-icon {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-input);
+    border: 1px solid var(--accent-money);
+    padding: 2px;
 }
 
 .money-plus {
@@ -148,8 +152,12 @@
 }
 
 .resource-type-icon {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-input);
+    border: 1px solid var(--accent-money);
+    padding: 2px;
 }
 
 .resource-stat-card h3 {

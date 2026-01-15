@@ -4,7 +4,8 @@ export const resourcePrices = {
     logistica: 10.50,
     finanzas: 10.50,
     hierro: 10.50,
-    carbon: 10.50
+    carbon: 10.50,
+    telecom: 10.50
 };
 
 export const companyTypes = {
