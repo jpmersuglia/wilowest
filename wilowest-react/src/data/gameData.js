@@ -1,11 +1,11 @@
 // Resource prices (base price per unit)
 export const resourcePrices = {
-    petroleo: 10.50,
-    logistica: 10.50,
-    finanzas: 10.50,
-    hierro: 10.50,
-    carbon: 10.50,
-    telecom: 10.50
+    petroleo: 2.50,
+    logistica: 1.50,
+    finanzas: 1.50,
+    hierro: 2.50,
+    carbon: 2.50,
+    telecom: 1.50
 };
 
 export const companyTypes = {

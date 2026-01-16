@@ -94,8 +94,16 @@ function Header() {
                         className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
                         onClick={() => setIsMenuOpen(false)}
                     >
-                        <img src="/media/usd-circle.svg" alt="" className="nav-icon" />
+                        <img src="/media/statistics.svg" alt="" className="nav-icon" />
                         Estadísticas
+                    </NavLink>
+                    <NavLink
+                        to="/stock-market"
+                        className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+                        onClick={() => setIsMenuOpen(false)}
+                    >
+                        <img src="/media/chart-line-up.svg" alt="" className="nav-icon" />
+                        Stock Market
                     </NavLink>
                 </nav>
 

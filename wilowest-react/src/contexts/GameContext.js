@@ -1,25 +1,27 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { resourcePrices, getInvestigationBonus, generateOfficial } from '../data/gameData';
+import { resourcePrices, getInvestigationBonus, generateOfficial, companyNames, companyTypes } from '../data/gameData';
 
 // Estado inicial del juego
 const initialState = {
-  mainCompanyMoney: 500000,
+  mainCompanyMoney: 150000,
   totalCompaniesCreated: 0,
-  totalMoneyEarned: 500000,
+  totalMoneyEarned: 150000,
   researchPoints: 0,
   companyResources: {
     petroleo: 0,
     logistica: 0,
     finanzas: 0,
     hierro: 0,
-    carbon: 0
+    carbon: 0,
+    telecom: 0
   },
   hiredOfficials: [],
   companies: [],
   purchasedInvestigations: [],
   candidates: [],
   hrSearchUntil: null,
-  hrSearchFilter: ''
+  hrSearchFilter: '',
+  stockMarketCompanies: []
 };
 
 // Tipos de acciones para el reducer
@@ -39,7 +41,10 @@ const ACTIONS = {
   SET_CANDIDATES: 'SET_CANDIDATES',
   REMOVE_OFFICIAL: 'REMOVE_OFFICIAL',
   START_HR_SEARCH: 'START_HR_SEARCH',
-  TICK: 'TICK'
+  REMOVE_OFFICIAL: 'REMOVE_OFFICIAL',
+  START_HR_SEARCH: 'START_HR_SEARCH',
+  TICK: 'TICK',
+  SET_STOCK_MARKET_COMPANIES: 'SET_STOCK_MARKET_COMPANIES'
 };
 
 // Reducer para manejar el estado
@@ -129,6 +134,12 @@ function gameReducer(state, action) {
         hrSearchFilter: action.payload.filter
       };
 
+    case ACTIONS.SET_STOCK_MARKET_COMPANIES:
+      return {
+        ...state,
+        stockMarketCompanies: action.payload
+      };
+
     case ACTIONS.ADD_INVESTIGATION:
       return {
         ...state,
@@ -159,7 +170,7 @@ function gameReducer(state, action) {
         let amount = 0;
         switch (company.tier) {
           case 0:
-            const upgradeLevels = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10 };
+            const upgradeLevels = { 0: 0, 1: 1, 2: 5, 3: 7, 4: 15, 5: 30, 6: 45, 7: 70, 8: 100, 9: 125, 10: 150 };
             amount = upgradeLevels[company.upgradeLevel || 0] || 0;
             break;
           case 1: amount = 15; break;
@@ -185,9 +196,9 @@ function gameReducer(state, action) {
         let baseIncrement = 0;
         switch (company.tier) {
           case 0: baseIncrement = company.upgradeLevel || 0; break;
-          case 1: baseIncrement = 125; break;
-          case 2: baseIncrement = 175; break;
-          case 3: baseIncrement = 220; break;
+          case 1: baseIncrement = 200; break;
+          case 2: baseIncrement = 300; break;
+          case 3: baseIncrement = 400; break;
           default: baseIncrement = 0;
         }
 
@@ -243,13 +254,13 @@ function gameReducer(state, action) {
           switch (company.tier) {
             case 0:
               const upgradeLevels = {
-                0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10
+                0: 0, 1: 1, 2: 4, 3: 5, 4: 8, 5: 12, 6: 16, 7: 21, 8: 30, 9: 40, 10: 50
               };
               resourceAmount = upgradeLevels[company.upgradeLevel || 0] || 0;
               break;
-            case 1: resourceAmount = 15; break;
-            case 2: resourceAmount = 25; break;
-            case 3: resourceAmount = 50; break;
+            case 1: resourceAmount = 75; break;
+            case 2: resourceAmount = 100; break;
+            case 3: resourceAmount = 150; break;
             default: resourceAmount = 0;
           }
           if (resourceAmount > 0) {
@@ -400,6 +411,10 @@ export function GameProvider({ children }) {
     dispatch({ type: ACTIONS.START_HR_SEARCH, payload: { until: until.toISOString(), filter } });
   };
 
+  const setStockMarketCompanies = (companies) => {
+    dispatch({ type: ACTIONS.SET_STOCK_MARKET_COMPANIES, payload: companies });
+  };
+
   const resetGame = () => {
     dispatch({ type: ACTIONS.RESET_GAME });
   };
@@ -424,7 +439,10 @@ export function GameProvider({ children }) {
     addMoney,
     setCandidates,
     removeOfficial,
-    startHRSearch
+    setCandidates,
+    removeOfficial,
+    startHRSearch,
+    setStockMarketCompanies
   };
 
   return (

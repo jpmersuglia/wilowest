@@ -1,0 +1,127 @@
+.stock-market-page {
+    min-height: 100vh;
+    background-color: var(--bg-dark);
+}
+
+.stock-market-view {
+    padding: 20px;
+    color: var(--text-white);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+
+.stock-market-view h2 {
+    color: var(--primary-green);
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+}
+
+.stock-market-view p {
+    color: var(--text-gray);
+    border-bottom: 2px solid var(--border-color);
+    font-size: 1.1rem;
+    margin-right: 10%;
+    margin-left: 10%;
+    margin-bottom: 1rem;
+}
+
+.stock-table-container {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.stock-table th,
+.stock-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.stock-table th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-gray);
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    user-select: none;
+}
+
+.stock-table th.sortable {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.stock-table th.sortable:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-white);
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.8em;
+}
+
+.stock-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.company-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.company-type-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.type-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.money-value {
+    color: var(--accent-money);
+    font-family: monospace;
+    font-size: 1.1em;
+}
+
+.share-price {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+/* Reusing tier badge styles locally just in case, but rely on global classes if possible */
+.tier-badge {
+    font-size: 0.75em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: var(--primary-green);
+    color: var(--text-white);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.tier-badge[data-tier="1"] {
+    background: linear-gradient(35deg, rgba(42, 123, 155, 1) 0%, rgba(87, 199, 133, 1) 50%, rgba(83, 93, 237, 1) 100%);
+}
+
+.tier-badge[data-tier="2"] {
+    background: linear-gradient(214deg, rgba(42, 155, 44, 1) 0%, rgba(87, 199, 133, 1) 50%, rgba(4, 79, 0, 1) 100%);
+}
+
+.tier-badge[data-tier="3"] {
+    background: linear-gradient(21deg, rgba(172, 173, 62, 1) 0%, rgba(199, 195, 87, 1) 50%, rgba(255, 255, 0, 1) 100%);
+}
