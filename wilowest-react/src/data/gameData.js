@@ -1,61 +1,62 @@
 // Resource prices (base price per unit)
 export const resourcePrices = {
-    petroleo: 2.50,
-    logistica: 1.50,
-    finanzas: 1.50,
-    hierro: 2.50,
-    carbon: 2.50,
-    telecom: 1.50
+    oil: 11.50,
+    logistics: 1.50,
+    finance: 1.50,
+    metal: 1.50,
+    ore: 1.50,
+    telecom: 1.50,
+    fuel: 5
 };
 
 export const companyTypes = {
     Petroleo: {
         idPrefix: "1",
-        resource: "petroleo",
+        resource: "oil",
         icon: "Petroleo.svg",
-        consumes: ["finanzas", "logistica"],
+        consumes: ["finance", "logistics"],
         cost: 60000
     },
     Transporte: {
         idPrefix: "2",
-        resource: "logistica",
+        resource: "logistics",
         icon: "Transporte.svg",
-        consumes: ["finanzas", "telecom"],
+        consumes: ["finance", "telecom", "fuel"],
         cost: 55000
     },
     Banco: {
         idPrefix: "3",
-        resource: "finanzas",
+        resource: "finance",
         icon: "Banco.svg",
-        consumes: ["logistica", "telecom"],
+        consumes: ["logistics", "telecom"],
         cost: 70000
     },
     Metalurgica: {
         idPrefix: "4",
-        resource: "hierro",
+        resource: "metal",
         icon: "Metalurgica.svg",
-        consumes: ["finanzas", "logistica"],
+        consumes: ["finance", "logistics"],
         cost: 80000
     },
     Mineria: {
         idPrefix: "5",
-        resource: "carbon",
+        resource: "ores",
         icon: "Mineria.svg",
-        consumes: ["finanzas", "logistica"],
+        consumes: ["finance", "logistics"],
         cost: 90000
     },
     Telecomunicaciones: {
         idPrefix: "6",
         resource: "telecom",
         icon: "Telecomunicaciones.svg",
-        consumes: ["finanzas", "logistica"],
+        consumes: ["finance", "logistics"],
         cost: 75000
     },
-    DummyCompany: {
+    Refineria: {
         idPrefix: "7",
-        resource: "dummy",
-        icon: "Banco2.svg",
-        consumes: ["finanzas", "logistica"],
+        resource: "fuel",
+        icon: "Refineria.svg",
+        consumes: ["finance", "logistics", "oil"],
         cost: 70
     }
 };
@@ -138,39 +139,39 @@ export const generateOfficial = (forceSpecialization = null) => {
 // Investigation tree data structure
 export const investigationTrees = {
     Petroleo: [
-        { id: "1.1.1", name: "Perforación Avanzada", effect: 5, cost: [10000, 100] },
-        { id: "1.1.2", name: "Refinamiento Mejorado", effect: 7, cost: [25000, 250] },
-        { id: "1.2.1", name: "Exploración Submarina", effect: 10, cost: [100000, 1000] }
+        { id: "1.1.1", name: "Perforación Avanzada", effect: 5, cost: [10000, 100], description: "Nuevas aleaciones en las cabezas de taladro permiten penetrar roca más dura y alcanzar yacimientos más profundos." },
+        { id: "1.1.2", name: "Refinamiento Mejorado", effect: 7, cost: [25000, 250], description: "Procesos químicos optimizados para separar impurezas, aumentando el rendimiento de barriles refinados." },
+        { id: "1.2.1", name: "Exploración Submarina", effect: 10, cost: [100000, 1000], description: "Tecnología de sonar y plataformas flotantes para extraer crudo del lecho marino." }
     ],
     Transporte: [
-        { id: "2.1.1", name: "Rutas Optimizadas", effect: 5, cost: [8000, 80] },
-        { id: "2.1.2", name: "Flota Modernizada", effect: 8, cost: [20000, 200] },
-        { id: "2.2.1", name: "Logística Inteligente", effect: 12, cost: [85000, 850] }
+        { id: "2.1.1", name: "Rutas Optimizadas", effect: 5, cost: [8000, 80], description: "Software de IA para calcular las rutas más eficientes, reduciendo consumo de combustible y tiempo." },
+        { id: "2.1.2", name: "Flota Modernizada", effect: 8, cost: [20000, 200], description: "Vehículos con motores híbridos y aerodinámica mejorada para mayor capacidad de carga." },
+        { id: "2.2.1", name: "Logística Inteligente", effect: 12, cost: [85000, 850], description: "Sistemas de seguimiento en tiempo real y gestión automatizada de inventarios." }
     ],
     Banco: [
-        { id: "3.1.1", name: "Algoritmos de Riesgo", effect: 5, cost: [15000, 150] },
-        { id: "3.1.2", name: "Banca Digital", effect: 7, cost: [35000, 350] },
-        { id: "3.2.1", name: "Inversiones Globales", effect: 15, cost: [150000, 1500] }
+        { id: "3.1.1", name: "Algoritmos de Riesgo", effect: 5, cost: [15000, 150], description: "Modelos predictivos que minimizan préstamos fallidos y maximizan el retorno de inversión." },
+        { id: "3.1.2", name: "Banca Digital", effect: 7, cost: [35000, 350], description: "Plataforma online robusta que reduce costos operativos y atrae a más clientes tech-savvy." },
+        { id: "3.2.1", name: "Inversiones Globales", effect: 15, cost: [150000, 1500], description: "Acceso a mercados internacionales y divisas extranjeras para diversificar el portafolio." }
     ],
     Metalurgica: [
-        { id: "4.1.1", name: "Fundición Eficiente", effect: 5, cost: [12000, 120] },
-        { id: "4.1.2", name: "Aleaciones Avanzadas", effect: 8, cost: [30000, 300] },
-        { id: "4.2.1", name: "Automatización Industrial", effect: 13, cost: [120000, 1200] }
+        { id: "4.1.1", name: "Fundición Eficiente", effect: 5, cost: [12000, 120], description: "Hornos de arco eléctrico de nueva generación que reducen el consumo energético." },
+        { id: "4.1.2", name: "Aleaciones Avanzadas", effect: 8, cost: [30000, 300], description: "Nuevas combinaciones de metales que crean productos más ligeros, resistentes y valiosos." },
+        { id: "4.2.1", name: "Automatización Industrial", effect: 13, cost: [120000, 1200], description: "Robots y cintas transportadoras autónomas para una línea de producción sin pausas." }
     ],
     Mineria: [
-        { id: "5.1.1", name: "Explosivos Mejorados", effect: 5, cost: [14000, 140] },
-        { id: "5.1.2", name: "Maquinaria Pesada", effect: 9, cost: [40000, 400] },
-        { id: "5.2.1", name: "Exploración Geológica", effect: 16, cost: [180000, 1800] }
+        { id: "5.1.1", name: "Explosivos Mejorados", effect: 5, cost: [14000, 140], description: "Compuestos químicos precisos para voladuras controladas que maximizan la extracción de mineral." },
+        { id: "5.1.2", name: "Maquinaria Pesada", effect: 9, cost: [40000, 400], description: "Excavadoras y camiones de gran tonelaje para mover tierra a una escala masiva." },
+        { id: "5.2.1", name: "Exploración Geológica", effect: 16, cost: [180000, 1800], description: "Escáneres de resonancia y satélites para detectar vetas minerales ocultas." }
     ],
     Telecomunicaciones: [
-        { id: "6.1.1", name: "Fibra Óptica", effect: 5, cost: [18000, 180] },
-        { id: "6.1.2", name: "5G Network", effect: 10, cost: [50000, 500] },
-        { id: "6.2.1", name: "Satélites de Comunicación", effect: 20, cost: [250000, 2500] }
+        { id: "6.1.1", name: "Fibra Óptica", effect: 5, cost: [18000, 180], description: "Cables de transmisión de datos a la velocidad de la luz para una conectividad sin latencia." },
+        { id: "6.1.2", name: "5G Network", effect: 10, cost: [50000, 500], description: "Infraestructura celular de alta velocidad para conectar millones de dispositivos simultáneamente." },
+        { id: "6.2.1", name: "Satélites de Comunicación", effect: 20, cost: [250000, 2500], description: "Constelación propia de satélites para cobertura global garantizada." }
     ],
-    DummyCompany: [
-        { id: "7.1.1", name: "Test1", effect: 5, cost: [1000, 180] },
-        { id: "7.1.2", name: "Test2", effect: 10, cost: [5000, 500] },
-        { id: "7.2.1", name: "Test3", effect: 20, cost: [2000, 200] }
+    Refineria: [
+        { id: "7.1.1", name: "Craqueo Catalítico", effect: 5, cost: [1000, 180], description: "Descompone hidrocarburos pesados en otros más ligeros y valiosos mediante catalizadores." },
+        { id: "7.1.2", name: "Destilación Fraccionada", effect: 10, cost: [5000, 500], description: "Separación precisa de componentes basada en sus puntos de ebullición para mayor pureza." },
+        { id: "7.2.1", name: "Tratamiento de Azufre", effect: 20, cost: [2000, 200], description: "Procesos de hidrodesulfuración para reducir emisiones y cumplir normativas ambientales." }
     ]
 };
 
