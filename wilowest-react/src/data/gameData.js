@@ -205,3 +205,19 @@ export function getInvestigationBonus(companyType, purchasedInvestigations) {
 
     return totalBonus;
 }
+
+export const TIER_CONFIG = [
+    { name: 'Lv1', min: 120000, max: 120000, tier: 0 }, // Assuming 0 for "Levels"
+    { name: 'Lv2', min: 150000, max: 175000, tier: 0 },
+    { name: 'Lv3', min: 175000, max: 220000, tier: 0 },
+    { name: 'Lv4', min: 220000, max: 275000, tier: 0 },
+    { name: 'Lv5', min: 275000, max: 350000, tier: 0 },
+    { name: 'Lv6', min: 350000, max: 475000, tier: 0 },
+    { name: 'Lv7', min: 475000, max: 575000, tier: 0 },
+    { name: 'Lv8', min: 575000, max: 850000, tier: 0 },
+    { name: 'Lv9', min: 850000, max: 1200000, tier: 0 },
+    { name: 'Lv10', min: 1200000, max: 5000000, tier: 0 },
+    { name: 'Tier1', min: 5000000, max: 20000000, tier: 1 },
+    { name: 'Tier2', min: 20000000, max: 100000000, tier: 2 },
+    { name: 'Tier3', min: 100000000, max: 100000000000, tier: 3 }
+];

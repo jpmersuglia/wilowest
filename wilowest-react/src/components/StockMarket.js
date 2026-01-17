@@ -1,32 +1,34 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useGame } from '../contexts/GameContext';
-import { companyNames, companyTypes } from '../data/gameData';
+import { companyNames, companyTypes, TIER_CONFIG, firstNames, lastNames } from '../data/gameData';
 import Header from './Header';
+import StockMarketModal from './StockMarketModal';
 import '../styles/StockMarket.css';
 
-const TIER_CONFIG = [
-    { name: 'Lv1', min: 120000, max: 120000, tier: 0 }, // Assuming 0 for "Levels"
-    { name: 'Lv2', min: 150000, max: 175000, tier: 0 },
-    { name: 'Lv3', min: 175000, max: 220000, tier: 0 },
-    { name: 'Lv4', min: 220000, max: 275000, tier: 0 },
-    { name: 'Lv5', min: 275000, max: 350000, tier: 0 },
-    { name: 'Lv6', min: 350000, max: 475000, tier: 0 },
-    { name: 'Lv7', min: 475000, max: 575000, tier: 0 },
-    { name: 'Lv8', min: 575000, max: 850000, tier: 0 },
-    { name: 'Lv9', min: 850000, max: 1200000, tier: 0 },
-    { name: 'Lv10', min: 1200000, max: 5000000, tier: 0 },
-    { name: 'Tier1', min: 5000000, max: 20000000, tier: 1 },
-    { name: 'Tier2', min: 20000000, max: 100000000, tier: 2 },
-    { name: 'Tier3', min: 100000000, max: 100000000000, tier: 3 }
-];
+
 
 function StockMarket() {
     const { stockMarketCompanies, setStockMarketCompanies } = useGame();
     const [sortConfig, setSortConfig] = useState({ key: 'value', direction: 'desc' });
+    const [selectedCompany, setSelectedCompany] = useState(null);
 
     useEffect(() => {
         if (!stockMarketCompanies || stockMarketCompanies.length === 0) {
             generateMarket();
+        } else {
+            // Migration: Check if CEOs are missing (for existing saves)
+            const firstCompany = stockMarketCompanies[0];
+            if (firstCompany && !firstCompany.ceo) {
+                const updatedCompanies = stockMarketCompanies.map(company => {
+                    const ceoFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+                    const ceoLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+                    return {
+                        ...company,
+                        ceo: `${ceoFirstName} ${ceoLastName}`
+                    };
+                });
+                setStockMarketCompanies(updatedCompanies);
+            }
         }
     }, [stockMarketCompanies, setStockMarketCompanies]);
 
@@ -105,6 +107,46 @@ function StockMarket() {
             const shareCount = validShares[Math.floor(Math.random() * validShares.length)];
             const sharePrice = value / shareCount;
 
+
+            // Generate History (Random Walk)
+            const history = [];
+            let currentHistoryValue = value;
+            for (let j = 0; j < 15; j++) {
+                // Generate a previous value
+                // We want: current = prev * (1 + change)
+                // So prev = current / (1 + change)
+
+                // Random change roughly +/- 5%
+                const changePercent = (Math.random() * 10 - 5) / 100;
+
+                // Reverse calculation to go backwards in time
+                let historyValue = currentHistoryValue / (1 + changePercent);
+
+                // Clamp within reasonable limits of the tier (optional, but good for consistency)
+                if (historyValue < tierConfig.min) historyValue = tierConfig.min;
+                if (historyValue > tierConfig.max) historyValue = tierConfig.max;
+
+                history.unshift(historyValue); // Add to beginning (oldest first)
+                currentHistoryValue = historyValue;
+            }
+
+            // Ensure current value is the last one in history (it's the "current" price)
+            // Actually, based on requirements "track the last 15 prices", usually includes current.
+            // Let's just make sure the history array is what we want.
+            // Requirement: "track de hasta los ultimos 15 precios"
+
+            // Movement indicator
+            // Compare current value with the one immediately before it
+            const previousValue = history[history.length - 1];
+            let movement = 'neutral';
+            if (value > previousValue) movement = 'up';
+            else if (value < previousValue) movement = 'down';
+
+            // Generate CEO
+            const ceoFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const ceoLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const ceo = `${ceoFirstName} ${ceoLastName}`;
+
             newCompanies.push({
                 id: Math.random().toString(36).substr(2, 9),
                 name,
@@ -113,7 +155,10 @@ function StockMarket() {
                 tier: tierConfig.tier,
                 value,
                 shareCount,
-                sharePrice
+                sharePrice,
+                history, // Store the array of prices
+                movement, // 'up', 'down', 'neutral'
+                ceo
             });
         }
         setStockMarketCompanies(newCompanies);
@@ -130,7 +175,7 @@ function StockMarket() {
                     <table className="stock-table">
                         <thead>
                             <tr>
-                                <th>Nombre / Lv</th>
+                                <th>Nombre</th>
                                 <th
                                     className="sortable"
                                     onClick={() => handleSort('type')}
@@ -145,19 +190,19 @@ function StockMarket() {
                                 >
                                     Valor Total {getSortIndicator('value')}
                                 </th>
-                                <th>Valor Acción</th>
+                                <th>Precio por Acción</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {sortedCompanies.map(company => (
-                                <tr key={company.id}>
+                                <tr key={company.id} onClick={() => setSelectedCompany(company)} className="clickable-row">
                                     <td>
                                         <div className="company-name-cell">
-                                            <span className="name">{company.name}</span>
                                             <span className="tier-badge" data-tier={company.tier}>
                                                 {company.tierLabel}
                                             </span>
+                                            <span className="name">{company.name}</span>
                                         </div>
                                     </td>
                                     <td>
@@ -174,7 +219,11 @@ function StockMarket() {
                                         <span className="money-value">{formatCurrency(company.value)}</span>
                                     </td>
                                     <td>
-                                        <span className="share-price">${company.sharePrice.toFixed(2)}</span>
+                                        <div className="share-price-cell">
+                                            {company.movement === 'up' && <span className="price-movement up">▲</span>}
+                                            {company.movement === 'down' && <span className="price-movement down">▼</span>}
+                                            <span className="share-price">${company.sharePrice.toFixed(2)}</span>
+                                        </div>
                                     </td>
                                     <td>{company.shareCount.toLocaleString()}</td>
                                 </tr>
@@ -183,6 +232,12 @@ function StockMarket() {
                     </table>
                 </div>
             </div>
+            {selectedCompany && (
+                <StockMarketModal
+                    company={selectedCompany}
+                    onClose={() => setSelectedCompany(null)}
+                />
+            )}
         </div>
     );
 }

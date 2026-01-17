@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { resourcePrices, getInvestigationBonus, generateOfficial, companyNames, companyTypes } from '../data/gameData';
+import { resourcePrices, getInvestigationBonus, generateOfficial, companyNames, companyTypes, TIER_CONFIG } from '../data/gameData';
 
 // Estado inicial del juego
 const initialState = {
@@ -21,7 +21,10 @@ const initialState = {
   candidates: [],
   hrSearchUntil: null,
   hrSearchFilter: '',
-  stockMarketCompanies: []
+  hrSearchUntil: null,
+  hrSearchFilter: '',
+  stockMarketCompanies: [],
+  tickCount: 0
 };
 
 // Tipos de acciones para el reducer
@@ -156,12 +159,63 @@ function gameReducer(state, action) {
       return initialState;
 
     case ACTIONS.TICK: {
-      const { companies, hiredOfficials, purchasedInvestigations, researchPoints, mainCompanyMoney, totalMoneyEarned, hrSearchUntil, hrSearchFilter } = state;
+      const { companies, hiredOfficials, purchasedInvestigations, researchPoints, mainCompanyMoney, totalMoneyEarned, hrSearchUntil, hrSearchFilter, stockMarketCompanies, tickCount = 0 } = state;
       let newResearchPoints = researchPoints;
       let additionalMainMoney = 0;
       let newCandidates = state.candidates;
       let newHrSearchUntil = hrSearchUntil;
       let generatedResources = { ...state.companyResources };
+      let newStockMarketCompanies = stockMarketCompanies;
+
+      // Handle Stock Market Fluctuations (Every 150 ticks)
+      const currentTick = tickCount + 1;
+      if (currentTick % 150 === 0 && stockMarketCompanies && stockMarketCompanies.length > 0) {
+        newStockMarketCompanies = stockMarketCompanies.map(company => {
+          // Find tier config to enforce limits
+          const tierConfig = TIER_CONFIG.find(t => t.name === company.tierLabel) ||
+            TIER_CONFIG.find(t => t.tier === company.tier);
+          // Fallback might be imprecise if multiple match tier, but tierLabel should match.
+
+          // Random change +/- 5%
+          const changePercent = (Math.random() * 10 - 5) / 100;
+          let newValue = company.value * (1 + changePercent);
+
+          // Force bounds
+          if (tierConfig) {
+            if (newValue < tierConfig.min) newValue = tierConfig.min;
+            if (newValue > tierConfig.max) newValue = tierConfig.max;
+          }
+
+          const newSharePrice = newValue / company.shareCount;
+
+          // Update History
+          // Maintain last 15 prices
+          // The current 'value' before this update becomes the newest history entry?
+          // Or should we push the *new* value? 
+          // Implementation plan said "Push old value to history", user said "track de hasta los ultimos 15 precios"
+          // Let's treat valid chart data as: [p_14, p_13, ... p_1, p_current].
+          // So we should push the *new* value to the history list if we want to show it, or keep it separate.
+          // Let's assume history array holds PAST prices, and current price is just current.
+          // BUT, usually a sparkline wants the whole series including current.
+          // Let's push the PREVIOUS value to history, then truncate.
+          const newHistory = [...(company.history || []), company.value];
+          if (newHistory.length > 15) {
+            newHistory.shift(); // Remove oldest
+          }
+
+          let movement = 'neutral';
+          if (newValue > company.value) movement = 'up';
+          else if (newValue < company.value) movement = 'down';
+
+          return {
+            ...company,
+            value: newValue,
+            sharePrice: newSharePrice,
+            history: newHistory,
+            movement
+          };
+        });
+      }
 
       // Calculate global production rates per tick
       const globalProductionRates = {};
@@ -304,7 +358,9 @@ function gameReducer(state, action) {
         totalMoneyEarned: totalMoneyEarned + additionalMainMoney,
         candidates: newCandidates,
         hrSearchUntil: newHrSearchUntil,
-        companyResources: generatedResources
+        companyResources: generatedResources,
+        stockMarketCompanies: newStockMarketCompanies,
+        tickCount: currentTick
       };
     }
 
