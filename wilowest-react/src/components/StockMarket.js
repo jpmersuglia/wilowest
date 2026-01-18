@@ -10,7 +10,20 @@ import '../styles/StockMarket.css';
 function StockMarket() {
     const { stockMarketCompanies, setStockMarketCompanies } = useGame();
     const [sortConfig, setSortConfig] = useState({ key: 'value', direction: 'desc' });
-    const [selectedCompany, setSelectedCompany] = useState(null);
+    const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+
+    // Derived selected company from the fresh list
+    const selectedCompany = useMemo(() => {
+        if (!selectedCompanyId || !stockMarketCompanies) return null;
+        return stockMarketCompanies.find(c => c.id === selectedCompanyId) || null;
+    }, [stockMarketCompanies, selectedCompanyId]);
+
+    // Close modal if selected company disappears (e.g. acquired)
+    useEffect(() => {
+        if (selectedCompanyId && !selectedCompany) {
+            setSelectedCompanyId(null);
+        }
+    }, [stockMarketCompanies, selectedCompanyId, selectedCompany]);
 
     useEffect(() => {
         if (!stockMarketCompanies || stockMarketCompanies.length === 0) {
@@ -158,7 +171,8 @@ function StockMarket() {
                 sharePrice,
                 history, // Store the array of prices
                 movement, // 'up', 'down', 'neutral'
-                ceo
+                ceo,
+                ownedShares: 0 // Initialize owned shares
             });
         }
         setStockMarketCompanies(newCompanies);
@@ -196,13 +210,18 @@ function StockMarket() {
                         </thead>
                         <tbody>
                             {sortedCompanies.map(company => (
-                                <tr key={company.id} onClick={() => setSelectedCompany(company)} className="clickable-row">
+                                <tr key={company.id} onClick={() => setSelectedCompanyId(company.id)} className="clickable-row">
                                     <td>
                                         <div className="company-name-cell">
                                             <span className="tier-badge" data-tier={company.tier}>
                                                 {company.tierLabel}
                                             </span>
                                             <span className="name">{company.name}</span>
+                                            {company.ownedShares > 0 && (
+                                                <span className="ownership-percentage">
+                                                    ({(company.ownedShares / company.shareCount * 100).toFixed(0)}%)
+                                                </span>
+                                            )}
                                         </div>
                                     </td>
                                     <td>
@@ -235,7 +254,7 @@ function StockMarket() {
             {selectedCompany && (
                 <StockMarketModal
                     company={selectedCompany}
-                    onClose={() => setSelectedCompany(null)}
+                    onClose={() => setSelectedCompanyId(null)}
                 />
             )}
         </div>
