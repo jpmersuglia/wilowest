@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
-import { companyTypes } from '../data/gameData';
+import { companyTypes, resourcePrices } from '../data/gameData';
 import { useGame } from '../contexts/GameContext';
 import '../styles/StockMarket.css';
 
@@ -27,12 +27,11 @@ ChartJS.register(
 function StockMarketModal({ company, onClose }) {
     const {
         mainCompanyMoney,
-        // updateMoney, // Removing updateMoney to avoid misuse
-        addMoney, // use addMoney instead
+        addMoney,
         stockMarketCompanies,
         setStockMarketCompanies,
         addCompany,
-        // removeCompany // Not needed unless we want to remove from main list, but we are adding.
+        companies
     } = useGame();
 
     const [buyAmount, setBuyAmount] = useState(0);
@@ -49,124 +48,76 @@ function StockMarketModal({ company, onClose }) {
     // Derived State
     const ownedShares = company.ownedShares || 0;
     const availableShares = company.shareCount - ownedShares;
+    const sharePrice = company.sharePrice;
 
-    // Buy Logic
-    const handleBuyChange = (e) => {
-        const val = parseInt(e.target.value) || 0;
-        if (val < 0) return;
-        // Cap at available shares
-        setBuyAmount(Math.min(val, availableShares));
+    // Buy Logic Calculation
+    const maxAffordableShares = Math.floor(mainCompanyMoney / sharePrice);
+    const maxBuyShares = Math.min(availableShares, maxAffordableShares);
+    const buyTotalCost = buyAmount * sharePrice;
+    const canBuy = buyAmount > 0 && buyAmount <= maxBuyShares;
+
+    // Sell Logic Calculation
+    const maxSellShares = ownedShares;
+    const sellTotalReturn = sellAmount * sharePrice;
+    const canSell = sellAmount > 0 && sellAmount <= maxSellShares;
+
+    // --- Handlers ---
+
+    // Buy Handlers
+    const handleBuyMoneyChange = (e) => {
+        const moneyVal = parseFloat(e.target.value) || 0;
+        // Convert money to shares (floor)
+        const sharesVal = Math.floor(moneyVal / sharePrice);
+        setBuyAmount(Math.min(sharesVal, maxBuyShares));
     };
 
-    const buyTotalCost = buyAmount * company.sharePrice;
-    const canBuy = buyAmount > 0 && buyTotalCost <= mainCompanyMoney;
+    const handleBuySharesChange = (e) => {
+        const sharesVal = parseInt(e.target.value) || 0;
+        setBuyAmount(Math.min(sharesVal, maxBuyShares));
+    };
 
     const executeBuy = () => {
         if (!canBuy) return;
 
-        // Deduct Money (Use addMoney with negative value)
         addMoney(-buyTotalCost);
 
-        // Update Company Data
         const updatedCompany = {
             ...company,
             ownedShares: ownedShares + buyAmount,
-            // Calculate new average buy price
             averageBuyPrice: ((ownedShares * (company.averageBuyPrice || 0)) + buyTotalCost) / (ownedShares + buyAmount)
         };
 
-        // Check for Acquisition (100% ownership)
         if (updatedCompany.ownedShares >= updatedCompany.shareCount) {
             handleAcquisition(updatedCompany);
         } else {
-            // Update in Stock Market List
             const updatedList = stockMarketCompanies.map(c =>
                 c.id === company.id ? updatedCompany : c
             );
             setStockMarketCompanies(updatedList);
-            // Update local company state to reflect changes immediately in modal if it stays open (though we might close it or it updates via parent re-render)
-            // Parent passes 'company' from 'selectedCompany'. We need to make sure parent updates 'selectedCompany' relative to the list.
-            // Actually, stockMarketCompanies update will trigger re-render in StockMarket.js,
-            // but StockMarket.js passes 'selectedCompany' state. We need to close or update that too.
-            // Ideally we close modal or lift the state better.
-            // Let's close modal for simplicity after transaction, or force update?
-            // Let's TRY to find the new company object from the new list if we want to keep it open.
-            // But since 'company' prop comes from a separate state in parent, we can't easily update it without a callback.
-            // I'll close the modal on successful transaction for now, OR I can just update the list and since the parent re-renders... wait.
-            // Parent re-renders, but 'selectedCompany' state is not automatically updated to the new reference in the list.
-            // Use 'onClose' to refresh? No.
-            // Let's add a callback 'onCompanyUpdate' or just close.
-            // User flow: Buy -> success -> maybe want to buy more?
-            // Let's just update the list. The Modal will likely show STALE data for 'ownedShares' unless we locally track it or parent updates.
-            // To fix this properly: parent should store ID of selected company, and derive the object from the list.
-            // I will implement that in StockMarket.js in the next step.
-            // For this step, I'll update the global list.
         }
-
-        // Reset inputs
         setBuyAmount(0);
     };
 
-    const handleAcquisition = (acquiredCompany) => {
-        // Remove from Stock Market
-        const updatedList = stockMarketCompanies.filter(c => c.id !== acquiredCompany.id);
-        setStockMarketCompanies(updatedList);
-
-        // Add to Main Companies
-        // We need to adapt the stock company object to the main company object structure
-        const newMainCompany = {
-            id: acquiredCompany.id, // Keep same ID? Or generate new? distinct lists, should be fine.
-            name: acquiredCompany.name,
-            type: acquiredCompany.type,
-            tier: acquiredCompany.tier, // Use the tier it had
-            tierLabel: acquiredCompany.tierLabel,
-            upgradeLevel: 1, // Default starting level for acquired
-            value: acquiredCompany.value, // Market cap as value?
-            // Need 'resource' if applicable.
-            // 'companyTypes' data might have this info?
-            // Let's check companyTypes in gameData. It usually has 'resource' map.
-            // We need to map 'type' to 'resource'.
-            // In gameData: companyTypes is object { "Petrolera": { icon: "...", ... } }
-            // Wait, does it have resource mapping?
-            // StockMarket.js line 87: const typeKeys = Object.keys(companyTypes);
-            // Let's infer resource from type or assume standard.
-            // 'Petrolera' -> 'petroleo'?
-            // We might need to look up the resource mapping.
-            // Let's assume for now we migrate basic props.
-            resource: getResourceForType(acquiredCompany.type),
-            consumes: [], // Fix: Initialize consumes to avoid crash
-            resources: {}, // Fix: Initialize resources
-            founded: new Date().toISOString(),
-            earnings: 0,
-            ...acquiredCompany // Spread the rest (history, ceo, etc might be useful)
-        };
-
-        addCompany(newMainCompany);
-        onClose(); // Close modal as company is gone from market
-        // Maybe show a notification? "Company Acquired!"
+    // Sell Handlers
+    const handleSellReturnChange = (e) => {
+        const moneyVal = parseFloat(e.target.value) || 0;
+        const sharesVal = Math.floor(moneyVal / sharePrice);
+        setSellAmount(Math.min(sharesVal, maxSellShares));
     };
 
-    // Sell Logic
-    const handleSellChange = (e) => {
-        const val = parseInt(e.target.value) || 0;
-        if (val < 0) return;
-        setSellAmount(Math.min(val, ownedShares));
+    const handleSellSharesChange = (e) => {
+        const sharesVal = parseInt(e.target.value) || 0;
+        setSellAmount(Math.min(sharesVal, maxSellShares));
     };
-
-    const sellTotalReturn = sellAmount * company.sharePrice;
-    const canSell = sellAmount > 0 && sellAmount <= ownedShares;
 
     const executeSell = () => {
         if (!canSell) return;
 
-        // Add Money
         addMoney(sellTotalReturn);
 
-        // Update Company
         const updatedCompany = {
             ...company,
             ownedShares: ownedShares - sellAmount,
-            // Average buy price remains the same on sell, usually
         };
 
         const updatedList = stockMarketCompanies.map(c =>
@@ -176,30 +127,86 @@ function StockMarketModal({ company, onClose }) {
         setSellAmount(0);
     };
 
-    // Helper for Acquisition Resource Mapping (Quick hardcoded map based on game context knowledge)
-    const getResourceForType = (type) => {
-        const map = {
-            'Petrolera': 'petroleo',
-            'Logistica': 'logistica',
-            'Financiera': 'finanzas',
-            'Minera': 'hierro', // or carbon?
-            'Industrial': 'carbon', // Simplified
-            'Tecnologica': 'telecom'
+    // Acquisition Helper
+    const calculateGlobalProductionRates = (currentCompanies) => {
+        const rates = {};
+        currentCompanies.forEach(c => {
+            if (!c.resource) return;
+            let amount = 0;
+            const uLevel = c.upgradeLevel || 0;
+            switch (c.tier) {
+                case 0:
+                    const levels = { 0: 0, 1: 1, 2: 5, 3: 7, 4: 15, 5: 30, 6: 45, 7: 70, 8: 100, 9: 125, 10: 150 };
+                    amount = levels[uLevel] || 0;
+                    break;
+                case 1: amount = 15; break;
+                case 2: amount = 25; break;
+                case 3: amount = 50; break;
+                default: amount = 0;
+            }
+            if (amount > 0) {
+                rates[c.resource] = (rates[c.resource] || 0) + amount;
+            }
+        });
+        return rates;
+    };
+
+    const handleAcquisition = (acquiredCompany) => {
+        const updatedList = stockMarketCompanies.filter(c => c.id !== acquiredCompany.id);
+        setStockMarketCompanies(updatedList);
+
+        const staticData = companyTypes[acquiredCompany.type];
+        let initialUpgradeLevel = 1;
+        if (acquiredCompany.tierLabel && acquiredCompany.tierLabel.startsWith('Lv')) {
+            initialUpgradeLevel = parseInt(acquiredCompany.tierLabel.replace('Lv', ''), 10) || 1;
+        }
+
+        let baseIncrement = 0;
+        switch (acquiredCompany.tier) {
+            case 0: baseIncrement = initialUpgradeLevel; break;
+            case 1: baseIncrement = 200; break;
+            case 2: baseIncrement = 300; break;
+            case 3: baseIncrement = 400; break;
+            default: baseIncrement = 0;
+        }
+
+        let resourceIncome = 0;
+        const globalRates = calculateGlobalProductionRates(companies);
+
+        if (staticData.consumes) {
+            staticData.consumes.forEach(res => {
+                const productionRate = globalRates[res] || 0;
+                if (productionRate > 0) {
+                    resourceIncome += productionRate * (resourcePrices[res] || 0);
+                }
+            });
+        }
+
+        const projectedEarnings = baseIncrement + resourceIncome;
+
+        const newMainCompany = {
+            id: acquiredCompany.id,
+            name: acquiredCompany.name,
+            type: acquiredCompany.type,
+            tier: acquiredCompany.tier,
+            tierLabel: acquiredCompany.tierLabel,
+            upgradeLevel: initialUpgradeLevel,
+            value: acquiredCompany.value,
+            resource: staticData.resource,
+            consumes: staticData.consumes,
+            resources: {},
+            founded: new Date().toISOString(),
+            earnings: projectedEarnings,
+            ...acquiredCompany
         };
-        // Verify with gameData if possible, but hardcoding for safety is better than null.
-        return map[type] || 'finanzas';
+
+        addCompany(newMainCompany);
+        onClose();
     };
 
 
-    // Chart Preparation
-    // Data correction: history holds Market Cap (Value). Chart might be better as Share Price.
+    // Chart Data
     const chartDataValues = company.history ? company.history.map(val => val / company.shareCount) : [];
-
-    // Profit/Loss Calculation
-    const currentValOfOwned = ownedShares * company.sharePrice;
-    const costOfOwned = ownedShares * (company.averageBuyPrice || company.sharePrice); // fallback if bought before tracking
-    const profitLoss = currentValOfOwned - costOfOwned;
-
     const chartData = {
         labels: Array.from({ length: chartDataValues.length }, (_, i) => i + 1),
         datasets: [{
@@ -237,6 +244,11 @@ function StockMarketModal({ company, onClose }) {
         }
     };
 
+    // Calculate profit/loss
+    const currentValOfOwned = ownedShares * company.sharePrice;
+    const costOfOwned = ownedShares * (company.averageBuyPrice || company.sharePrice);
+    const profitLoss = currentValOfOwned - costOfOwned;
+
     const handleContentClick = (e) => e.stopPropagation();
 
     return (
@@ -246,10 +258,10 @@ function StockMarketModal({ company, onClose }) {
                 <div className="modal-header">
                     <div className="modal-title-box">
                         <div className="header-top-row">
-                            <span className="company-type-badge">{company.type}</span>
                             <span className="tier-badge" data-tier={company.tier}>{company.tierLabel}</span>
                         </div>
                         <h2>{company.name}</h2>
+                        <span className="company-type-badge">{company.type}</span>
                     </div>
                     <button className="modal-close-btn" onClick={onClose}>&times;</button>
                 </div>
@@ -260,7 +272,6 @@ function StockMarketModal({ company, onClose }) {
                             <label>CEO</label>
                             <span>{company.ceo || 'Unknown'}</span>
                         </div>
-                        {/* Type moved to header, removed from here */}
                         <div className="info-item">
                             <label>Valor de Acción</label>
                             <span className="high-value">${company.sharePrice.toFixed(2)}</span>
@@ -273,13 +284,14 @@ function StockMarketModal({ company, onClose }) {
                             <label>Cap. de Mercado</label>
                             <span>${company.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                         </div>
-
                         {ownedShares > 0 && (
                             <>
                                 <div className="info-divider"></div>
                                 <div className="info-item">
                                     <label>Acciones en Tenencia</label>
-                                    <span style={{ color: '#4caf50', fontWeight: 'bold' }}>{ownedShares.toLocaleString()} ({(ownedShares / company.shareCount * 100).toFixed(1)}%)</span>
+                                    <span style={{ color: '#4caf50', fontWeight: 'bold' }}>
+                                        {ownedShares.toLocaleString()} ({(ownedShares / company.shareCount * 100).toFixed(1)}%)
+                                    </span>
                                 </div>
                                 <div className="info-item">
                                     <label>Ganancias / Pérdidas</label>
@@ -298,74 +310,105 @@ function StockMarketModal({ company, onClose }) {
                     </div>
                 </div>
 
-                <div className="modal-actions-container">
-                    {/* Buy Section */}
-                    <div className="trade-section buy-section">
+                {/* TRADING SECTION */}
+                <div className="trading-grid">
+
+                    {/* BUY PANEL (Left) */}
+                    <div className="trade-panel buy-panel">
                         <h3>Comprar</h3>
-                        <div className="trade-controls">
+
+                        <div className="slider-group">
+                            <label>Monto en Dinero: <span className="highlight-val">${buyTotalCost.toLocaleString()}</span></label>
                             <input
-                                type="number"
+                                type="range"
                                 min="0"
-                                max={availableShares}
-                                value={buyAmount}
-                                onChange={handleBuyChange}
-                                className="trade-input"
+                                max={maxBuyShares * sharePrice}
+                                value={buyAmount * sharePrice}
+                                step={sharePrice} /* Snap to share price multiples */
+                                onChange={handleBuyMoneyChange}
+                                className="styled-range buy-range"
                             />
-                            <div className="quick-amounts">
-                                <button onClick={() => setBuyAmount(Math.floor(availableShares * 0.1))}>10%</button>
-                                <button onClick={() => setBuyAmount(Math.floor(availableShares * 0.5))}>50%</button>
-                                <button onClick={() => setBuyAmount(availableShares)}>Max</button>
+                        </div>
+
+                        <div className="slider-group">
+                            <label>Cantidad de Acciones: <span className="highlight-val">{buyAmount.toLocaleString()}</span></label>
+                            <input
+                                type="range"
+                                min="0"
+                                max={maxBuyShares}
+                                value={buyAmount}
+                                onChange={handleBuySharesChange}
+                                className="styled-range buy-range"
+                            />
+                        </div>
+
+                        <div className="panel-footer">
+                            <div className="trade-summary">
+                                <span>Total:</span>
+                                <span className={canBuy ? 'valid-cost' : 'invalid-cost'}>
+                                    ${buyTotalCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                </span>
                             </div>
+                            <button
+                                className="action-btn buy-btn"
+                                disabled={!canBuy}
+                                onClick={executeBuy}
+                            >
+                                CONFIRMAR COMPRA
+                            </button>
                         </div>
-                        <div className="trade-summary">
-                            <span>Coste Total:</span>
-                            <span className={canBuy ? 'valid-cost' : 'invalid-cost'}>
-                                ${buyTotalCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                        <button
-                            className="action-btn buy-btn"
-                            disabled={!canBuy}
-                            onClick={executeBuy}
-                        >
-                            Confirmar Compra
-                        </button>
                     </div>
 
-                    {/* Sell Section */}
-                    <div className="trade-section sell-section">
+                    {/* SELL PANEL (Right) */}
+                    <div className="trade-panel sell-panel">
                         <h3>Vender</h3>
-                        <div className="trade-controls">
+
+                        <div className="slider-group">
+                            <label>Retorno en Dinero: <span className="highlight-val">${sellTotalReturn.toLocaleString()}</span></label>
                             <input
-                                type="number"
+                                type="range"
                                 min="0"
-                                max={ownedShares}
-                                value={sellAmount}
-                                onChange={handleSellChange}
-                                className="trade-input"
+                                max={maxSellShares * sharePrice}
+                                value={sellAmount * sharePrice}
+                                step={sharePrice}
+                                onChange={handleSellReturnChange}
                                 disabled={ownedShares === 0}
+                                className="styled-range sell-range"
                             />
-                            <div className="quick-amounts">
-                                <button onClick={() => setSellAmount(Math.floor(ownedShares * 0.1))} disabled={ownedShares === 0}>10%</button>
-                                <button onClick={() => setSellAmount(Math.floor(ownedShares * 0.5))} disabled={ownedShares === 0}>50%</button>
-                                <button onClick={() => setSellAmount(ownedShares)} disabled={ownedShares === 0}>Max</button>
+                        </div>
+
+                        <div className="slider-group">
+                            <label>Cantidad de Acciones: <span className="highlight-val">{sellAmount.toLocaleString()}</span></label>
+                            <input
+                                type="range"
+                                min="0"
+                                max={maxSellShares}
+                                value={sellAmount}
+                                onChange={handleSellSharesChange}
+                                disabled={ownedShares === 0}
+                                className="styled-range sell-range"
+                            />
+                        </div>
+
+                        <div className="panel-footer">
+                            <div className="trade-summary">
+                                <span>Retorno:</span>
+                                <span className="valid-cost">
+                                    ${sellTotalReturn.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                </span>
                             </div>
+                            <button
+                                className="action-btn sell-btn"
+                                disabled={!canSell}
+                                onClick={executeSell}
+                            >
+                                CONFIRMAR VENTA
+                            </button>
                         </div>
-                        <div className="trade-summary">
-                            <span>Retorno Total:</span>
-                            <span className="valid-cost">
-                                ${sellTotalReturn.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                        <button
-                            className="action-btn sell-btn"
-                            disabled={!canSell}
-                            onClick={executeSell}
-                        >
-                            Confirmar Venta
-                        </button>
                     </div>
+
                 </div>
+
             </div>
         </div>
     );

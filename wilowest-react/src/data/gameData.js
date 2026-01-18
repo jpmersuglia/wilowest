@@ -4,7 +4,7 @@ export const resourcePrices = {
     logistics: 1.50,
     finance: 1.50,
     metal: 1.50,
-    ore: 1.50,
+    ores: 1.50,
     telecom: 1.50,
     fuel: 5
 };

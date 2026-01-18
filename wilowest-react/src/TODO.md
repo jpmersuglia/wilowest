@@ -34,16 +34,16 @@
 - Hierro
 - Carbon
 
-•Quitar Recursos / min 
-- Solo mostrar el recurso que produce la empresa por tick
+✓ •Quitar Recursos / min 
+✓ Solo mostrar el recurso que produce la empresa por tick
 
 •Agregar un sistema de eventos
 - Eventos aleatorios que afectan a la empresa positivamente, negativamente y neutralmente.
 - Modificar el funcionamiento normal de las empresas
 
-•Agregar Stock Market
-- Comprar acciones de las empresas (Al tener 100% de acciones de una empresa la tenemos disponible en "Mis Compañias")
-- Vender acciones de las empresas
-- Ver el valor de las acciones de las empresas
+✓ •Agregar Stock Market
+✓ Comprar acciones de las empresas (Al tener 100% de acciones de una empresa la tenemos disponible en "Mis Compañias")
+✓ Vender acciones de las empresas
+✓ Ver el valor de las acciones de las empresas
 
 •Agregar un tracker de visitas en un menu oculto para ver quien ha visitado la pagina de github y jugado el juego
