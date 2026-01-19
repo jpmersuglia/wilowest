@@ -6,11 +6,13 @@ import InvestigationTree from './components/InvestigationTree';
 import RRHH from './components/RRHH';
 import Statistics from './components/Statistics';
 import StockMarket from './components/StockMarket';
+import GameEvents from './components/GameEvents';
 import './App.css';
 
 function App() {
   return (
     <GameProvider>
+      <GameEvents />
       <Router>
         <div className="App">
           <Routes>

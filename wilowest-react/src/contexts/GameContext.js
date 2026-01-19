@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { resourcePrices, getInvestigationBonus, generateOfficial, companyNames, companyTypes, TIER_CONFIG } from '../data/gameData';
+import { events } from '../data/events';
 
 // Estado inicial del juego
 const initialState = {
@@ -23,7 +24,8 @@ const initialState = {
   hrSearchUntil: null,
   hrSearchFilter: '',
   stockMarketCompanies: [],
-  tickCount: 0
+  tickCount: 0,
+  activeEvent: null
 };
 
 // Tipos de acciones para el reducer
@@ -46,7 +48,9 @@ const ACTIONS = {
   REMOVE_OFFICIAL: 'REMOVE_OFFICIAL',
   START_HR_SEARCH: 'START_HR_SEARCH',
   TICK: 'TICK',
-  SET_STOCK_MARKET_COMPANIES: 'SET_STOCK_MARKET_COMPANIES'
+  TICK: 'TICK',
+  SET_STOCK_MARKET_COMPANIES: 'SET_STOCK_MARKET_COMPANIES',
+  SET_ACTIVE_EVENT: 'SET_ACTIVE_EVENT'
 };
 
 // Reducer para manejar el estado
@@ -142,6 +146,12 @@ function gameReducer(state, action) {
         stockMarketCompanies: action.payload
       };
 
+    case ACTIONS.SET_ACTIVE_EVENT:
+      return {
+        ...state,
+        activeEvent: action.payload
+      };
+
     case ACTIONS.ADD_INVESTIGATION:
       return {
         ...state,
@@ -165,6 +175,13 @@ function gameReducer(state, action) {
       let newHrSearchUntil = hrSearchUntil;
       let generatedResources = { ...state.companyResources };
       let newStockMarketCompanies = stockMarketCompanies;
+      let newActiveEvent = state.activeEvent;
+
+      // Random Event Trigger (0.5% chance per tick if no event active)
+      if (!newActiveEvent && Math.random() < 0.005) {
+        const randomEvent = events[Math.floor(Math.random() * events.length)];
+        newActiveEvent = randomEvent;
+      }
 
       // Handle Stock Market Fluctuations (Every 150 ticks)
       const currentTick = tickCount + 1;
@@ -359,7 +376,8 @@ function gameReducer(state, action) {
         hrSearchUntil: newHrSearchUntil,
         companyResources: generatedResources,
         stockMarketCompanies: newStockMarketCompanies,
-        tickCount: currentTick
+        tickCount: currentTick,
+        activeEvent: newActiveEvent
       };
     }
 
@@ -470,6 +488,59 @@ export function GameProvider({ children }) {
     dispatch({ type: ACTIONS.SET_STOCK_MARKET_COMPANIES, payload: companies });
   };
 
+  const closeEvent = () => {
+    dispatch({ type: ACTIONS.SET_ACTIVE_EVENT, payload: null });
+  };
+
+  const resolveEventOption = (event, option) => {
+    const isSuccess = Math.random() < option.successRate;
+    const effect = isSuccess ? option.successEffect : option.failEffect;
+
+    // Apply Effect
+    if (effect) {
+      switch (effect.type) {
+        case 'money_multiplier':
+          const bonus = Math.floor(state.mainCompanyMoney * (effect.value - 1));
+          addMoney(bonus);
+          break;
+        case 'money_loss':
+          addMoney(-effect.value);
+          break;
+        case 'lump_sum':
+          addMoney(effect.value);
+          break;
+        case 'research_points':
+          updateResearchPoints(prev => prev + effect.value);
+          break;
+        case 'resource_gain':
+          if (effect.resource) {
+            updateResources({
+              [effect.resource]: (state.companyResources[effect.resource] || 0) + effect.value
+            });
+          }
+          break;
+        case 'resource_loss_all':
+          const newResources = {};
+          Object.keys(state.companyResources).forEach(res => {
+            newResources[res] = Math.floor(state.companyResources[res] * (1 - effect.value));
+          });
+          updateResources(newResources);
+          break;
+        case 'production_dip':
+          addMoney(-5000);
+          break;
+        default:
+          break;
+      }
+    }
+
+    return {
+      success: isSuccess,
+      message: effect ? effect.message : "No pasó nada.",
+      onClose: closeEvent
+    };
+  };
+
   const resetGame = () => {
     dispatch({ type: ACTIONS.RESET_GAME });
   };
@@ -497,7 +568,9 @@ export function GameProvider({ children }) {
     setCandidates,
     removeOfficial,
     startHRSearch,
-    setStockMarketCompanies
+    setStockMarketCompanies,
+    resolveEventOption,
+    closeEvent
   };
 
   return (
