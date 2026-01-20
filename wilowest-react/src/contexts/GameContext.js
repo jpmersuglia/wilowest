@@ -177,10 +177,15 @@ function gameReducer(state, action) {
       let newStockMarketCompanies = stockMarketCompanies;
       let newActiveEvent = state.activeEvent;
 
-      // Random Event Trigger (0.5% chance per tick if no event active)
-      if (!newActiveEvent && Math.random() < 0.005) {
-        const randomEvent = events[Math.floor(Math.random() * events.length)];
-        newActiveEvent = randomEvent;
+      // Random Event Trigger per Company (50% chance per company if no event active, stops at first event)
+      if (!newActiveEvent && companies.length > 0) {
+        for (const company of companies) {
+          if (Math.random() < 0.005) { // .5% chance per company
+            const randomEvent = events[Math.floor(Math.random() * events.length)];
+            newActiveEvent = { ...randomEvent, targetCompany: company };
+            break; // Valid one event at a time
+          }
+        }
       }
 
       // Handle Stock Market Fluctuations (Every 150 ticks)
