@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/wilowest/static/css/main.93020b3c.css",
+    "main.js": "/wilowest/static/js/main.7440ff9c.js",
+    "static/js/488.6d35c52a.chunk.js": "/wilowest/static/js/488.6d35c52a.chunk.js",
+    "service-worker.js": "/wilowest/service-worker.js",
+    "index.html": "/wilowest/index.html",
+    "main.93020b3c.css.map": "/wilowest/static/css/main.93020b3c.css.map",
+    "main.7440ff9c.js.map": "/wilowest/static/js/main.7440ff9c.js.map",
+    "488.6d35c52a.chunk.js.map": "/wilowest/static/js/488.6d35c52a.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.93020b3c.css",
+    "static/js/main.7440ff9c.js"
+  ]
+}
